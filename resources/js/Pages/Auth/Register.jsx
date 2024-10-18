@@ -4,6 +4,7 @@ import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
+import { Select, MenuItem } from '@mui/material';
 import { Head, Link, useForm } from '@inertiajs/react';
 
 export default function Register() {
@@ -12,6 +13,9 @@ export default function Register() {
         email: '',
         password: '',
         password_confirmation: '',
+        numero_cedula: '',
+        telefono: '',
+        role: '',
     });
 
     useEffect(() => {
@@ -35,6 +39,21 @@ export default function Register() {
             <Head title="Register" />
 
             <form onSubmit={submit}>
+                <div className='mt-4'>
+                    <InputLabel htmlFor="role" value="Role"/>
+                    <Select
+                    id="role"
+                    name="role"
+                    value={data.role}
+                    className="mt-1 block w-full"
+                    onChange={handleOnChange}
+                    required
+                    >
+                        <MenuItem value="admin">Admin</MenuItem>
+                        <MenuItem value="empleado">Empleado</MenuItem>
+
+                    </Select>
+                </div>
                 <div>
                     <InputLabel htmlFor="name" value="Name" />
 
@@ -67,6 +86,32 @@ export default function Register() {
                     />
 
                     <InputError message={errors.email} className="mt-2" />
+                </div>
+
+                <div className="mt-4">
+                    <InputLabel htmlFor="numero_cedula" value="numero de Cedula" />
+                    <TextInput
+                    id="numero_cedula"
+                    name="numero_cedula"
+                    value={data.numero_cedula}
+                    className="mt-1 block w-full"
+                    onChange={handleOnChange}
+                    required
+                    />
+                    <InputError message={errors.numero_cedula} className='mt-2'/>
+                </div>
+
+                <div className="mt-4">
+                    <InputLabel htmlFor="telefono" value="telefono" />
+                    <TextInput
+                    id="telefono"
+                    name="telefono"
+                    value={data.telefono}
+                    className="mt-1 block w-full"
+                    onChange={handleOnChange}
+                    required
+                    />
+                    <InputError message={errors.telefono} className='mt-2'/>
                 </div>
 
                 <div className="mt-4">

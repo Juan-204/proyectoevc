@@ -35,13 +35,21 @@ class RegisteredUserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:'.User::class,
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'numero_cedula' => 'required|string',
+            'telefono' => 'required|string',
+            'role' => 'required|string|in:admin,empleado',
         ]);
 
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            'numero_cedula' => $request->numero_cedula ,
+            'telefono' => $request-> telefono,
         ]);
+
+        //asignar el rol al usuario
+        $user->assignRole($request->role);
 
         event(new Registered($user));
 

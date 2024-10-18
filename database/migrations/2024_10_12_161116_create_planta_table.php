@@ -15,7 +15,7 @@ return new class extends Migration
     {
         Schema::create('planta', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('id_municipio')->constrained('municipios')->onUpdate('cascade')->onDelete('cascade');
+            $table->foreignId('id_municipio')->constrained('municipio')->onUpdate('cascade')->onDelete('cascade');
             $table->string('nombre');
             $table->integer('telefono')->nulleable();
             $table->string('direccion')->nulleable();

@@ -16,7 +16,7 @@ return new class extends Migration
         Schema::create('ingresos', function (Blueprint $table) {
             $table->id();
             $table->foreignId('id_establecimiento')->constrained('establecimiento')->onUpdate('cascade')->onDelete('cascade');
-            $table->foreignId('id_empleado')->constrained('empleados')->onUpdate('cascade')->onDelete('cascade');
+            $table->foreignId('id_user')->constrained('users')->onUpdate('cascade')->onDelete('cascade');
             $table->foreignId('id_planta')->constrained('planta')->onUpdate('cascade')->onDelete('cascade');
             $table->string('estado',50)->nullable();
             $table->date('fecha')->nullable();

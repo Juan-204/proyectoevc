@@ -16,10 +16,10 @@ return new class extends Migration
         Schema::create('establecimiento', function (Blueprint $table) {
             $table->id();
             $table->string('marca_diferencial',50)->nullable();
-            $table->string('nombre_dueño');
+            $table->string('nombre_dueno');
             $table->string('nombre_establecimiento');
             $table->string('direccion')->nulleable();
-            $table->foreignId('id_municipio')->constrained('municipios')->onUpdate('cascade')->onDelete('cascade');
+            $table->foreignId('id_municipio')->constrained('municipio')->onUpdate('cascade')->onDelete('cascade');
             $table->integer('cedula')->nullable();
             $table->integer('telefono')->nullable();
             $table->timestamps();

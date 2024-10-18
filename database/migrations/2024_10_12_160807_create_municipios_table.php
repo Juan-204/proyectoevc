@@ -13,11 +13,12 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('municipios', function (Blueprint $table) {
+        Schema::create('municipio', function (Blueprint $table) {
             $table->id();
             $table->foreignId('id_departamento')->constrained('departamento')->onUpdate('cascade')->onDelete('cascade');
             $table->Integer('codigo_departamento');
-            $table->string('nombre_municipio');
+            $table->string('nombre_municipios');
+            $table->integer('codigo_municipios');
             $table->timestamps();
         });
     }
