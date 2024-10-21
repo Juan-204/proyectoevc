@@ -22,7 +22,6 @@ class AnimalController extends Controller
         $request->validate([
             'animales' => 'required|array',
             'animales.*.numero_animal' => 'required|string',
-            'animales.*.lote' => 'required|string',
             'animales.*.peso' => 'required|integer',
             'animales.*.numero_tiquete' => 'nullable|integer',
             'animales.*.sexo' => 'nullable|string|max:255',
@@ -31,17 +30,28 @@ class AnimalController extends Controller
             'animales.*.id_establecimiento' => 'required|exists:establecimiento,id',
         ]);
 
-        dd($request->all());
+        //dd($request->all());
 
         //CREAR EL INGRESO
         DB::transaction(function () use ($request) {
-            $ingreso = Ingreso::create([
-                'id_user' => 1,
-                'id_planta' => 1,
-                'fecha' => now(),
-            ]);
 
-            foreach ($request->animales as $animalData)
+            //obtener la fecha actual
+            $hoy = now()->format('Y-m-d');
+
+            //verificar si ya existe un ingreso para hoy
+            $ingreso = Ingreso::whereDate('fecha', $hoy)->first();
+
+            //si no existe, crear un nuevo ingreso
+            if(!$ingreso) {
+                $ingreso = Ingreso::create([
+                    'id_user' => 1,
+                    'id_planta' => 1,
+                    'fecha' => $hoy,
+                ]);
+            }
+
+            //agregar los animales al ingreso existente
+            foreach ($request->input('animales') as $animalData)
             {
                 $animal = Animal::create($animalData);
                 IngresoDetalle::create([
