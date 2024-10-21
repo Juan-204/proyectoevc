@@ -3,10 +3,15 @@ import { Head } from '@inertiajs/react';
 import { Box, TextField, Button, MenuItem, Select, FormControl, InputLabel, Typography, Table, TableHead, TableRow, TableBody, TableCell} from '@mui/material';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import * as yup from 'yup';
+import { yupResolver } from '@hookform/resolvers/yup';
+import Swal from 'sweetalert2';
 
-export default function Dashboard(props) {
+
+export default function entradaproducto(props) {
     //estado para manejar los datos
-    const [animalData, setAnimalData] = useState({
+    /*const [animalData, setAnimalData] = useState({
         numero_animal: '',
         lote: '',
         peso: '',
@@ -15,11 +20,12 @@ export default function Dashboard(props) {
         guia_movilizacion: '',
         especie: '',
         id_establecimiento: '',
-    });
+    });*/
 
     const [animales, setAnimales] = useState([]); //tabla temporal de animales
     const [establecimientos, setEstablecimientos] = useState([]);
 
+    //obtenemos los establecimientos para visualizarlos mediante un dropdown
     useEffect(() => {
         const fetchEstablecimientos = async () => {
             try {
@@ -34,79 +40,72 @@ export default function Dashboard(props) {
     }, []);
 
     //funcion para manejar los cambios de los datos
-    const handleChange = (e) => {
+    /*const handleChange = (e) => {
         const {name, value} = e.target;
         setAnimalData({ ...animalData, [name]: value });
-    }
+    }*/
+
+    const schema = yup.object().shape({
+        numero_animal: yup.string().required('Numero de animal es obligatorio'),
+        peso: yup.string().required('Peso es obligatorio'),
+        numero_tiquete: yup.string().required('Numero de tiquete es obligatorio'),
+        sexo: yup.string().required('Sexo es obligatorio'),
+        guia_movilizacion: yup.string().required('Guia movilización es obligatoria'),
+        especie: yup.string().required('Especie es obligatoria'),
+        id_establecimiento: yup.string().required('Destino es obligatorio'),
+    })
+
+    const { register, handleSubmit, reset, formState: {errors}} = useForm({
+        resolver: yupResolver(schema)
+    })
 
     //agregar animales en una tabla temporal
-    const agregarAnimal = () => {
-        setAnimales([...animales, animalData]);
-        setAnimalData({
-            numero_animal: '',
-            lote: '',
-            peso: '',
-            numero_tiquete: '',
-            sexo: '',
-            guia_movilizacion: '',
-            especie: '',
-            id_establecimiento: '',
-        });
+    const agregarAnimal = (data) => {
+        setAnimales([...animales, data]);
+        reset();
+
     };
-
-    //funcion para manejar el envio de los datos mediante el formulario
-    /*const handleSubmit = async (e) => {
-        e.preventDefault();
-        try{
-
-            const animalDataParce = {
-                ...animalData,
-                numero_tiquete: parseInt(animalData.numero_tiquete, 10)
-            };
-
-
-            const response = await axios.post('/api/animales', animalDataParce);
-            console.log('Animal agregado', response.data);
-
-
-
-            setAnimalData({
-                numero_animal: '',
-                lote: '',
-                peso: '',
-                numero_tiquete: '',
-                sexo: '',
-                guia_movilizacion:'',
-                especie: '',
-                id_establecimiento: '',
-            })
-
-        } catch (error) {
-            console.error('Error al agregar el animal', error, error.response.data);
-        }
-    };*/
 
     const HandleGuardarIngreso = async () => {
         try{
-
             const animalesParse = animales.map(animal => ({
                 ...animal,
-
                 peso: parseFloat(animal.peso),
                 numero_tiquete: parseInt(animal.numero_tiquete, 10),
             }));
 
-            /*console.log('datos a enviar', {
-                animales: animalesParse
-            })
-*/
             const response = await axios.post('/api/guardar-ingreso', {animales: animalesParse})
             console.log('Ingreso guardado con exito', response.data);
+            setAnimales([]);
+            reset();
+            Swal.fire({
+                position: "center",
+                icon: "success",
+                title: "Registro guardado con exito",
+                showConfirmButton: false,
+                timer: 1500
+            })
+
         } catch (error) {
             if (error.response){
                 console.error('Errores de validacion', error.response.data.errors)
-            }else {
+                setAnimales([])
+                Swal.fire({
+                    position: "center",
+                    icon: "warning",
+                    title: "Error de validacion",
+                    showConfirmButton: false,
+                    timer: 1500
+                })
+            } else {
                 console.error('Error al guardar ingreso', error);
+                Swal.fire({
+                    position: "center",
+                    icon: "success",
+                    title: "Error al guardar el ingreso",
+                    showConfirmButton: false,
+                    timer: 1500
+                })
             }
         }
     };
@@ -120,121 +119,137 @@ export default function Dashboard(props) {
         >
             <Head title="Entrada Producto" />
             <div className="py-12">
-                <div className="mx-auto sm:px-6 lg:px-8 text-6xl">
-                    <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg flex ">
+                <div className="mx-auto sm:px-6 lg:px-8">
+                    <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg flex flex-col items-center">
 
-                    <Typography variant="h4" component="h1" gutterBottom>
-                            Agregar Animal
-                        </Typography>
+                        <Typography variant="h4" component="h1" gutterBottom>
+                                Agregar Animal
+                            </Typography>
 
-                    <Box
-                    class="flex flex-row space-x-9"
-                    component="form"
-                    //onSubmit={handleSubmit} //maneja el envio del formulario
-                    sx={{ maxWidth: 600, mx: 'auto', mt: 4 }}>
+                        <Box
+                        class="m-0  flex flex-row space-x-9 h-auto items-start"
+                        component="form"
+                        onSubmit={handleSubmit(agregarAnimal)} //maneja el envio del formulario
+                        sx={{ maxWidth: 600, mx: 'auto', mt: 4}}>
 
-                        <FormControl
-                        variant='filled'
-                        fullWidth
-                        margin='normal'>
-                            <InputLabel>Destino</InputLabel>
-                            <Select
-                            name='id_establecimiento'
-                            value={animalData.id_establecimiento}
-                            onChange={handleChange}
-                            label="Destino"
-                            required
+                            <FormControl
+                            variant='filled'
+                            fullWidth
+                            margin='normal'>
+                                <InputLabel>Destino</InputLabel>
+                                <Select
+                                {...register('id_establecimiento')}
+                                error={!!errors.id_establecimiento}
+                                label="Destino"
+                                defaultValue=""
+                                >
+                                    <MenuItem value="">
+                                        <em>Seleccione Un Destino</em>
+                                    </MenuItem>
+                                {establecimientos.map(establecimiento => (
+                                    <MenuItem key={establecimiento.id} value={establecimiento.id}>
+                                        {establecimiento.marca_diferencial} {establecimiento.nombre_dueno}
+                                    </MenuItem>
+                                ))}
+                                </Select>
+                                {errors.id_establecimiento && <Typography color="error" sx={{marginBottom: 2}}  >{errors.id_establecimiento.message}</Typography>}
+                            </FormControl>
+
+                            <FormControl
+                            variant="filled"
+                            fullWidth
+                            margin="normal">
+                                <TextField
+                                    variant='filled'
+                                    label="Número de Animal"
+                                    {...register('numero_animal')}
+                                    error={!!errors.numero_animal}
+                                />
+                                {errors.numero_animal && <Typography color="error" sx={{marginBottom: 2}} >{errors.numero_animal.message}</Typography>}
+                            </FormControl>
+
+                            <FormControl
+                            variant="filled"
+                            fullWidth
+                            margin="normal"
                             >
-                            {establecimientos.map(establecimiento => (
-                                <MenuItem key={establecimiento.id} value={establecimiento.id}>
-                                    {establecimiento.marca_diferencial} {establecimiento.nombre_dueno}
-                                </MenuItem>
-                            ))}
-                            </Select>
-                        </FormControl>
+                                <TextField
+                                    variant='filled'
+                                    label="Peso"
+                                    type="number"
+                                    {...register('peso')}
+                                    error={!!errors.peso}
+                                />
+                                {errors.peso && <Typography color="error">{errors.peso.message}</Typography>}
+                            </FormControl>
 
-                        <TextField
-                            label="Número de Animal"
+                            <FormControl
                             variant="filled"
                             fullWidth
-                            margin="normal"
-                            name='numero_animal'
-                            value={animalData.numero_animal}
-                            onChange={handleChange}
-                            required
-                        />
-                        <TextField
-                            label="Lote"
-                            variant="filled"
-                            fullWidth
-                            margin="normal"
-                            name='lote'
-                            value={animalData.lote}
-                            onChange={handleChange}
-                        />
-                        <TextField
-                            label="Peso"
-                            variant="filled"
-                            fullWidth
-                            margin="normal"
-                            type="number"
-                            name='peso'
-                            value={animalData.peso}
-                            onChange={handleChange}
-                            required
-                        />
-                        <TextField
-                            label="Número de Tiquete"
-                            variant="filled"
-                            fullWidth
-                            margin="normal"
-                            type="number"
-                            name='numero_tiquete'
-                            value={animalData.numero_tiquete}
-                            onChange={handleChange}
-                            required
-                        />
+                            margin="normal">
+                                <TextField
+                                    variant='filled'
+                                    label="Número de Tiquete"
+                                    type="number"
+                                    {...register('numero_tiquete')}
+                                    error={!!errors.numero_tiquete}
+                                />
+                                {errors.numero_tiquete && <Typography color="error">{errors.numero_tiquete.message}</Typography>}
+                            </FormControl>
 
-                        <FormControl variant='filled'  fullWidth margin="normal">
-                            <InputLabel>Sexo</InputLabel>
-                            <Select
-                                name='sexo'
-                                value={animalData.sexo}
-                                onChange={handleChange}
-                                label="Sexo"
-                                required
-                            >
-                                <MenuItem value="Macho">Macho</MenuItem>
-                                <MenuItem value="Hembra">Hembra</MenuItem>
-                            </Select>
-                        </FormControl>
-                        <TextField
-                            label="Guía de Movilización"
+                            <FormControl variant='filled'  fullWidth margin="normal">
+                                <InputLabel>Sexo</InputLabel>
+                                <Select
+                                    variant='filled'
+                                    label="Sexo"
+                                    {...register('sexo')}
+                                    error={!!errors.sexo}
+                                >
+                                    <MenuItem value="Macho">Macho</MenuItem>
+                                    <MenuItem value="Hembra">Hembra</MenuItem>
+                                </Select>
+                                {errors.sexo && <Typography color="error">{errors.sexo.message}</Typography>}
+                            </FormControl>
+
+                            <FormControl
                             variant="filled"
                             fullWidth
                             margin="normal"
-                            name='guia_movilizacion'
-                            value={animalData.guia_movilizacion}
-                            onChange={handleChange}
-                            required
-                        />
-                        <FormControl variant='filled'  fullWidth margin="normal">
-                            <InputLabel>Especie</InputLabel>
-                            <Select
-                                name='especie'
-                                value={animalData.especie}
-                                onChange={handleChange}
-                                label="especie"
-                                required
                             >
-                                <MenuItem value="Bovino">Bovino</MenuItem>
-                                <MenuItem value="Porcino">Porcino</MenuItem>
-                            </Select>
-                        </FormControl>
-                        <Button variant="contained" color="primary" onClick={agregarAnimal} sx={{ mt: 2 }}>
-                            Agregar Animal
-                        </Button>
-                    </Box>
+                            <TextField
+                                variant='filled'
+                                label="Guía de Movilización"
+                                {...register('guia_movilizacion')}
+                                error={!!errors.guia_movilizacion}
+                            />
+                            {errors.guia_movilizacion && <Typography color="error">{errors.guia_movilizacion.message}</Typography>}
+                            </FormControl>
+
+                            <FormControl
+                                variant='filled'
+                                fullWidth
+                                margin="normal"
+                                >
+                                <InputLabel>Especie</InputLabel>
+                                <Select
+                                    {...register('especie')}
+                                    error={!!errors.especie}
+                                    label="especie"
+                                >
+                                    <MenuItem value="Bovino">Bovino</MenuItem>
+                                    <MenuItem value="Porcino">Porcino</MenuItem>
+                                </Select>
+                                {errors.especie && <Typography color="error">{errors.especie.message}</Typography>}
+                            </FormControl>
+                            <FormControl
+                            fullWidth
+                            margin='normal'
+                            >
+                            <Button type="submit" variant="contained" color="primary" className="shrink-0 h-12">
+                                Agregar Animal
+                            </Button>
+                            </FormControl>
+                        </Box>
                     </div>
 
                     <Table>
@@ -242,7 +257,6 @@ export default function Dashboard(props) {
                             <TableRow>
                                 <TableCell>Destino</TableCell>
                                 <TableCell>Numero animal</TableCell>
-                                <TableCell>Lote</TableCell>
                                 <TableCell>Peso</TableCell>
                                 <TableCell>Numero de tiquete</TableCell>
                                 <TableCell>Sexo</TableCell>
@@ -255,7 +269,6 @@ export default function Dashboard(props) {
                                 <TableRow key={index}>
                                     <TableCell>{animal.id_establecimiento}</TableCell>
                                     <TableCell>{animal.numero_animal}</TableCell>
-                                    <TableCell>{animal.lote}</TableCell>
                                     <TableCell>{animal.peso}</TableCell>
                                     <TableCell>{animal.numero_tiquete}</TableCell>
                                     <TableCell>{animal.sexo}</TableCell>
