@@ -20,4 +20,14 @@ class Establecimiento extends Model
         'cedula',
     ];
 
+    public function animales()
+    {
+        return $this->hasMany(Animal::class, 'id_establecimiento');
+    }
+
+    public function ingresos()
+    {
+        return $this->hasMany(Ingreso::class, 'id_planta');
+    }
+
 }

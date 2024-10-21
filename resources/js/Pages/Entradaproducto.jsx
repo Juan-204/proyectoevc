@@ -1,6 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head } from '@inertiajs/react';
-import { Box, TextField, Button, MenuItem, Select, FormControl, InputLabel, Typography} from '@mui/material';
+import { Box, TextField, Button, MenuItem, Select, FormControl, InputLabel, Typography, Table, TableHead, TableRow, TableBody, TableCell} from '@mui/material';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
 
@@ -15,8 +15,9 @@ export default function Dashboard(props) {
         guia_movilizacion: '',
         especie: '',
         id_establecimiento: '',
-    })
+    });
 
+    const [animales, setAnimales] = useState([]); //tabla temporal de animales
     const [establecimientos, setEstablecimientos] = useState([]);
 
     useEffect(() => {
@@ -38,8 +39,23 @@ export default function Dashboard(props) {
         setAnimalData({ ...animalData, [name]: value });
     }
 
+    //agregar animales en una tabla temporal
+    const agregarAnimal = () => {
+        setAnimales([...animales, animalData]);
+        setAnimalData({
+            numero_animal: '',
+            lote: '',
+            peso: '',
+            numero_tiquete: '',
+            sexo: '',
+            guia_movilizacion: '',
+            especie: '',
+            id_establecimiento: '',
+        });
+    };
+
     //funcion para manejar el envio de los datos mediante el formulario
-    const handleSubmit = async (e) => {
+    /*const handleSubmit = async (e) => {
         e.preventDefault();
         try{
 
@@ -68,6 +84,31 @@ export default function Dashboard(props) {
         } catch (error) {
             console.error('Error al agregar el animal', error, error.response.data);
         }
+    };*/
+
+    const HandleGuardarIngreso = async () => {
+        try{
+
+            const animalesParse = animales.map(animal => ({
+                ...animal,
+
+                peso: parseFloat(animal.peso),
+                numero_tiquete: parseInt(animal.numero_tiquete, 10),
+            }));
+
+            /*console.log('datos a enviar', {
+                animales: animalesParse
+            })
+*/
+            const response = await axios.post('/api/guardar-ingreso', {animales: animalesParse})
+            console.log('Ingreso guardado con exito', response.data);
+        } catch (error) {
+            if (error.response){
+                console.error('Errores de validacion', error.response.data.errors)
+            }else {
+                console.error('Error al guardar ingreso', error);
+            }
+        }
     };
 
 
@@ -89,7 +130,7 @@ export default function Dashboard(props) {
                     <Box
                     class="flex flex-row space-x-9"
                     component="form"
-                    onSubmit={handleSubmit} //maneja el envio del formulario
+                    //onSubmit={handleSubmit} //maneja el envio del formulario
                     sx={{ maxWidth: 600, mx: 'auto', mt: 4 }}>
 
                         <FormControl
@@ -190,14 +231,45 @@ export default function Dashboard(props) {
                                 <MenuItem value="Porcino">Porcino</MenuItem>
                             </Select>
                         </FormControl>
-                        <Button variant="contained" color="primary" type="submit" sx={{ mt: 2 }}>
+                        <Button variant="contained" color="primary" onClick={agregarAnimal} sx={{ mt: 2 }}>
                             Agregar Animal
                         </Button>
                     </Box>
-
-
-
                     </div>
+
+                    <Table>
+                        <TableHead>
+                            <TableRow>
+                                <TableCell>Destino</TableCell>
+                                <TableCell>Numero animal</TableCell>
+                                <TableCell>Lote</TableCell>
+                                <TableCell>Peso</TableCell>
+                                <TableCell>Numero de tiquete</TableCell>
+                                <TableCell>Sexo</TableCell>
+                                <TableCell>Guia de movilizacion</TableCell>
+                                <TableCell>Especie</TableCell>
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>
+                            {animales.map((animal, index) => (
+                                <TableRow key={index}>
+                                    <TableCell>{animal.id_establecimiento}</TableCell>
+                                    <TableCell>{animal.numero_animal}</TableCell>
+                                    <TableCell>{animal.lote}</TableCell>
+                                    <TableCell>{animal.peso}</TableCell>
+                                    <TableCell>{animal.numero_tiquete}</TableCell>
+                                    <TableCell>{animal.sexo}</TableCell>
+                                    <TableCell>{animal.guia_movilizacion}</TableCell>
+                                    <TableCell>{animal.especie}</TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+
+                    <Button variant="contained" color="primary" onClick={HandleGuardarIngreso} sx={{mt:2}}>
+                        Guardar Ingreso
+                    </Button>
+
                 </div>
             </div>
         </AuthenticatedLayout>

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AnimalController;
 use App\Http\Controllers\EstablecimientoController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
@@ -35,8 +36,6 @@ Route::get('/entradaproducto', function () {
 })->middleware(['auth', 'verified'])->name('entradaproducto');
 
 Route::get('/establecimientos', [EstablecimientoController::class, 'index']);
-
-
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
