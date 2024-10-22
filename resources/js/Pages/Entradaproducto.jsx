@@ -10,18 +10,6 @@ import Swal from 'sweetalert2';
 
 
 export default function entradaproducto(props) {
-    //estado para manejar los datos
-    /*const [animalData, setAnimalData] = useState({
-        numero_animal: '',
-        lote: '',
-        peso: '',
-        numero_tiquete: '',
-        sexo: '',
-        guia_movilizacion: '',
-        especie: '',
-        id_establecimiento: '',
-    });*/
-
     const [animales, setAnimales] = useState([]); //tabla temporal de animales
     const [establecimientos, setEstablecimientos] = useState([]);
 
@@ -38,15 +26,9 @@ export default function entradaproducto(props) {
 
         fetchEstablecimientos();
     }, []);
-
-    //funcion para manejar los cambios de los datos
-    /*const handleChange = (e) => {
-        const {name, value} = e.target;
-        setAnimalData({ ...animalData, [name]: value });
-    }*/
-
+    //definicion de esquema para manejo de errores
     const schema = yup.object().shape({
-        numero_animal: yup.string().required('Numero de animal es obligatorio'),
+        numero_animal: yup.string().required('Numero de animal es obligatorio').nullable(),
         peso: yup.string().required('Peso es obligatorio'),
         numero_tiquete: yup.string().required('Numero de tiquete es obligatorio'),
         sexo: yup.string().required('Sexo es obligatorio'),
@@ -68,6 +50,12 @@ export default function entradaproducto(props) {
 
     const HandleGuardarIngreso = async () => {
         try{
+
+            axios.defaults.withCredentials = true;
+            axios.defaults.baseURL = 'http://localhost:8000'
+
+
+
             const animalesParse = animales.map(animal => ({
                 ...animal,
                 peso: parseFloat(animal.peso),
@@ -78,6 +66,7 @@ export default function entradaproducto(props) {
             console.log('Ingreso guardado con exito', response.data);
             setAnimales([]);
             reset();
+            //mensaje en forma de modal para la confirmacion de el ingreso del registro
             Swal.fire({
                 position: "center",
                 icon: "success",
@@ -90,6 +79,7 @@ export default function entradaproducto(props) {
             if (error.response){
                 console.error('Errores de validacion', error.response.data.errors)
                 setAnimales([])
+                //mensajes en forma de modal para la aprobacion de el formulario
                 Swal.fire({
                     position: "center",
                     icon: "warning",
@@ -112,6 +102,7 @@ export default function entradaproducto(props) {
 
 
     return (
+
         <AuthenticatedLayout
             auth={props.auth}
             errors={props.errors}
@@ -125,13 +116,11 @@ export default function entradaproducto(props) {
                         <Typography variant="h4" component="h1" gutterBottom>
                                 Agregar Animal
                             </Typography>
-
                         <Box
-                        class="m-0  flex flex-row space-x-9 h-auto items-start"
+                        class="p-5 flex flex-row space-x-9 h-auto w-full items-center "
                         component="form"
                         onSubmit={handleSubmit(agregarAnimal)} //maneja el envio del formulario
                         sx={{ maxWidth: 600, mx: 'auto', mt: 4}}>
-
                             <FormControl
                             variant='filled'
                             fullWidth
@@ -152,20 +141,20 @@ export default function entradaproducto(props) {
                                     </MenuItem>
                                 ))}
                                 </Select>
-                                {errors.id_establecimiento && <Typography color="error" sx={{marginBottom: 2}}  >{errors.id_establecimiento.message}</Typography>}
+                                {errors.id_establecimiento && <Typography color="error">{errors.id_establecimiento.message}</Typography>}
                             </FormControl>
 
                             <FormControl
                             variant="filled"
                             fullWidth
-                            margin="normal">
+                            margin='normal'>
                                 <TextField
                                     variant='filled'
                                     label="Número de Animal"
                                     {...register('numero_animal')}
                                     error={!!errors.numero_animal}
                                 />
-                                {errors.numero_animal && <Typography color="error" sx={{marginBottom: 2}} >{errors.numero_animal.message}</Typography>}
+                                {errors.numero_animal && <Typography color="error" >{errors.numero_animal.message}</Typography>}
                             </FormControl>
 
                             <FormControl
@@ -245,7 +234,7 @@ export default function entradaproducto(props) {
                             fullWidth
                             margin='normal'
                             >
-                            <Button type="submit" variant="contained" color="primary" className="shrink-0 h-12">
+                            <Button type="submit" variant="contained" color="primary" className="shrink-0">
                                 Agregar Animal
                             </Button>
                             </FormControl>
