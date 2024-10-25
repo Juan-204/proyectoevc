@@ -45,17 +45,13 @@ export default function entradaproducto(props) {
     const agregarAnimal = (data) => {
         setAnimales([...animales, data]);
         reset();
-
     };
 
     const HandleGuardarIngreso = async () => {
         try{
 
-            axios.defaults.withCredentials = true;
-            axios.defaults.baseURL = 'http://localhost:8000'
-
-
-
+            //axios.defaults.withCredentials = true;
+            //axios.defaults.baseURL = 'http://localhost:8000'
             const animalesParse = animales.map(animal => ({
                 ...animal,
                 peso: parseFloat(animal.peso),
@@ -91,7 +87,7 @@ export default function entradaproducto(props) {
                 console.error('Error al guardar ingreso', error);
                 Swal.fire({
                     position: "center",
-                    icon: "success",
+                    icon: "warning",
                     title: "Error al guardar el ingreso",
                     showConfirmButton: false,
                     timer: 1500
@@ -108,16 +104,16 @@ export default function entradaproducto(props) {
             errors={props.errors}
             header={<h2 className="font-semibold text-xl text-gray-800 leading-tight">Entrada Procuto</h2>}
         >
-            <Head title="Entrada Producto" />
+            <Head title="Entrada Producto"/>
             <div className="py-12">
                 <div className="mx-auto sm:px-6 lg:px-8">
-                    <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg flex flex-col items-center">
+                    <div className="bg-white overflow-hidden h-52 shadow-sm sm:rounded-lg flex flex-col items-center">
 
-                        <Typography variant="h4" component="h1" gutterBottom>
+                        <Typography variant="h4" sx={{marginTop: '20px', marginBottom: '0px'}} component="h1" gutterBottom>
                                 Agregar Animal
                             </Typography>
                         <Box
-                        class="p-5 flex flex-row space-x-9 h-auto w-full items-center "
+                        class="p-5 flex flex-row space-x-9 h-auto w-full items-start "
                         component="form"
                         onSubmit={handleSubmit(agregarAnimal)} //maneja el envio del formulario
                         sx={{ maxWidth: 600, mx: 'auto', mt: 4}}>
@@ -147,7 +143,8 @@ export default function entradaproducto(props) {
                             <FormControl
                             variant="filled"
                             fullWidth
-                            margin='normal'>
+                            margin='normal'
+                            >
                                 <TextField
                                     variant='filled'
                                     label="Número de Animal"

@@ -63,23 +63,20 @@ class AnimalController extends Controller
         return response()->json(['message' => 'Ingreso guardado con exito']);
     }
 
+    public function getAnimalesByEstablecimiento($id){
 
-/*
-    public function store(Request $request)
-    {
-        $request->validate([
-            'numero_animal' => 'required|integer',
-            'lote' => 'required|integer',
-            'peso' => 'required|integer',
-            'numero_tiquete' => 'nullable|integer',
-            'sexo' => 'nullable|string|max:255',
-            'guia_movilizacion' => 'nullable|string|max:150',
-            'especie' => 'nullable|string|max:255',
-            'id_establecimiento' => 'required|exists:establecimiento,id'
-        ]);
+        $hoy = now()->format('Y-m-d');
 
-        $animal = Animal::create($request->all());
-        return response()->json($animal, 201);
+        $animales = DB::table('ingresos_detalles')
+            ->join('animales', 'ingresos_detalles.id_animales', '=', 'animales.id')
+            ->join('ingresos', 'ingresos_detalles.id_ingresos', '=', 'ingresos.id')
+            ->where('animales.id_establecimiento', $id)
+            ->whereDate('ingresos.fecha', $hoy)
+            ->select('animales.*')
+            ->get();
+
+        //$animales = Animal::where('id_establecimiento', $id)->get();
+        //se devuelve los animales con una respuesta JSON
+        return response()->json($animales);
     }
-*/
 }

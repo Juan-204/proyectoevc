@@ -35,7 +35,10 @@ Route::get('/entradaproducto', function () {
     return Inertia::render('Entradaproducto');
 })->middleware(['auth', 'verified'])->name('entradaproducto');
 
-Route::get('/establecimientos', [EstablecimientoController::class, 'index']);
+Route::get('/guiatransporte', function () {
+    return Inertia::render('Guiatransporte');
+})->middleware(['auth', 'verified'])->name('guiatransporte');
+//Route::get('/establecimientos', [EstablecimientoController::class, 'index']);
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
