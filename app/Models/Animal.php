@@ -25,6 +25,9 @@ class Animal extends Model
     {
         return $this->belongsTo(Establecimiento::class, 'id_establecimiento');
     }
+    public function ingresoDetalles(){
+        return $this->hasMany(IngresoDetalle::class, 'id_animales');
+    }
 
 
 }

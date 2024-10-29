@@ -49,9 +49,6 @@ export default function entradaproducto(props) {
 
     const HandleGuardarIngreso = async () => {
         try{
-
-            //axios.defaults.withCredentials = true;
-            //axios.defaults.baseURL = 'http://localhost:8000'
             const animalesParse = animales.map(animal => ({
                 ...animal,
                 peso: parseFloat(animal.peso),
@@ -154,6 +151,20 @@ export default function entradaproducto(props) {
                                 {errors.numero_animal && <Typography color="error" >{errors.numero_animal.message}</Typography>}
                             </FormControl>
 
+                            <FormControl variant='filled'  fullWidth margin="normal">
+                                <InputLabel>Sexo</InputLabel>
+                                <Select
+                                    variant='filled'
+                                    label="Sexo"
+                                    {...register('sexo')}
+                                    error={!!errors.sexo}
+                                >
+                                    <MenuItem value="Macho">Macho</MenuItem>
+                                    <MenuItem value="Hembra">Hembra</MenuItem>
+                                </Select>
+                                {errors.sexo && <Typography color="error">{errors.sexo.message}</Typography>}
+                            </FormControl>
+
                             <FormControl
                             variant="filled"
                             fullWidth
@@ -181,20 +192,6 @@ export default function entradaproducto(props) {
                                     error={!!errors.numero_tiquete}
                                 />
                                 {errors.numero_tiquete && <Typography color="error">{errors.numero_tiquete.message}</Typography>}
-                            </FormControl>
-
-                            <FormControl variant='filled'  fullWidth margin="normal">
-                                <InputLabel>Sexo</InputLabel>
-                                <Select
-                                    variant='filled'
-                                    label="Sexo"
-                                    {...register('sexo')}
-                                    error={!!errors.sexo}
-                                >
-                                    <MenuItem value="Macho">Macho</MenuItem>
-                                    <MenuItem value="Hembra">Hembra</MenuItem>
-                                </Select>
-                                {errors.sexo && <Typography color="error">{errors.sexo.message}</Typography>}
                             </FormControl>
 
                             <FormControl

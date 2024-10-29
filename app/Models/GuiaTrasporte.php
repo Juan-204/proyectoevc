@@ -13,8 +13,8 @@ class GuiaTrasporte extends Model
 
     protected $fillable = [
         'id_ingreso_detalle',
-        'id_cod_veh',
-        'fecha_hora',
+        'id_vehiculo_conductor',
+        'fecha',
         'carne_octavos',
         'viseras_blancas',
         'viseras_rojas',
@@ -29,7 +29,7 @@ class GuiaTrasporte extends Model
     }
     public function vehiculo()
     {
-        return $this->belongsTo(Vehiculo::class, 'id_cod_veh');
+        return $this->belongsTo(Vehiculo::class, 'id_vehiculo_conductor');
     }
 
 }

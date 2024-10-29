@@ -1,76 +1,156 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head } from "@inertiajs/react";
-import { Box, FormControl, Menu, MenuItem, Select, TextField, Typography, InputLabel, Table, TableHead, TableRow, TableCell, TableBody, Paper } from "@mui/material";
+import { Box, FormControl,Button,MenuItem, Select, TextField, Typography, InputLabel, Table, TableHead, TableRow, TableCell, TableBody, Paper } from "@mui/material";
 import { useEffect, useState } from "react";
-import axios from "axios";
+import axios, { Axios } from "axios";
 import { toast, ToastContainer } from "react-toastify";
+import Swal from "sweetalert2";
+
 
 
 export default function guiatransporte(props) {
     const [establecimientos, setEstablecimientos] = useState([]);
+    const [formDictamen, setFormDictamen] = useState(false)
+    const [ingresoDetalles, setIngresoDetalles] = useState([]);
     const [selectedEstablecimiento, setSelectedEstablecimiento] = useState('');
-    const [selectedAnimal, setselectedAnimal] = useState(null);
     const [detallesEstablecimiento, setDetallesEstablecimiento] = useState({
         nombre_dueno: '',
         direccion: '',
         telefono: '',
     })
-    const [animales, setAnimales] = useState([]);
+    const [formData, setFormData] = useState({
+        id_ingreso_detalle: '',
+        carne_octavos: '',
+        viseras_blancas: '',
+        viseras_rojas: '',
+        cabezas: '',
+        temperatura_promedio: '',
+        dictamen: '',
+    })
+    const [selectedAnimal, setselectedAnimal] = useState('');
+    const [showAnimalForm ,setShowAnimalForm] = useState(false);
 
     useEffect(() => {
-        const fetchEstablecimientos = async () => {
-            try {
-                const response = await axios.get('/api/establecimientos');
-                setEstablecimientos(response.data)
-            }catch (error) {
-                console.log('error al cargar los establecimientos', error)
-            }
-        };
-        fetchEstablecimientos()
+        axios.get('/api/establecimientos')
+                .then(response => setEstablecimientos(response.data))
+                .catch(error => console.error('Error al cargar establecimiento', error))
     }, [])
 
-    const handleChange = async (event) => {
-        const idEstablecimiento = event.target.value;
+    const cargarAnimales = (idEstablecimiento) => {
+        axios.get(`/api/animales/establecimiento/${idEstablecimiento}`)
+        .then(response => {
+            console.log('Animales del Establecimiento', response.data);
+            setIngresoDetalles(response.data);
+        })
+        .catch(error => console.error('Error al cargar los animales', error))
+    }
+
+    const cargarIngresoDetalles = (idEstablecimiento) => {
+        axios.get(`/api/ingreso-detalles?establecimiento=${idEstablecimiento}`)
+        .then(response => {
+                    console.log('Ingreso Detalles:', response.data)
+                    setIngresoDetalles(response.data)
+                })
+                .catch(error => console.log('Error al cargar ingreso detalles', error))
+    }
+
+    const handleEstablecimientoChange = (e) => {
+        const idEstablecimiento = e.target.value;
         setSelectedEstablecimiento(idEstablecimiento)
-        //BUSCAR LOS DETALLES DEL ESTABLECIMIENTO SELECCIONADO
-        const establecimiento = establecimientos.find(est => est.id === parseInt(idEstablecimiento))
+        cargarIngresoDetalles(idEstablecimiento)
 
-        if (establecimiento) {
-            //LENAR LOS OTROS CAMPOS CON LOS DETALLES DEL ESTABLECIMIENTO
+        //cargarAnimales(idEstablecimiento)
+
+        const establecimientoSelect = establecimientos.find(est => est.id === parseInt(idEstablecimiento))
+        if (establecimientoSelect) {
             setDetallesEstablecimiento({
-                nombre_dueno: establecimiento.nombre_dueno,
-                direccion: establecimiento.direccion,
-                telefono: establecimiento.telefono
+                nombre_dueno: establecimientoSelect.nombre_dueno,
+                direccion: establecimientoSelect.direccion,
+                telefono: establecimientoSelect.telefono,
             });
-
-            //HACER LA LLAMADA PARA OBTENER LOS ANIMALES
-            try {
-                const response = await axios.get(`/api/establecimientos/${idEstablecimiento}/animales`)
-                const AnimalesData = response.data
-
-                if(AnimalesData.length === 0){
-                    toast.info('No hay animales disponibles para este establecimiento')
-                } else {
-                    toast.info('Animales cargados con exito')
-                }
-                setAnimales(response.data)
-            }catch (error) {
-                console.log('Error al cargar los animales', error)
-            }
-            //limpiar los detalles si no se selecciona ningun establecimiento
         } else {
-            console.log('no se selecciono un establecimiento valido')
             setDetallesEstablecimiento({
                 nombre_dueno: '',
                 direccion: '',
                 telefono: '',
             })
-            setAnimales([]) //LIMPIAR LOS ANIMALES
         }
     }
 
-    const HandleChangeAnimal = (event) => {
-        setselectedAnimal(event.target.value)
+    //funcion para buscar el animal seleccionado en los detalles de el ingreso
+    const handleAnimalChange = (e) => {
+        const animalSele = ingresoDetalles.find(animal => animal.id === parseInt(e.target.value))
+        console.log('Animal selecionado', animalSele)
+        setselectedAnimal(animalSele)
+        setFormData(prevFormData => ({
+            ...prevFormData,
+            id_ingreso_detalle: animalSele ? animalSele.id : '',
+        }))
+        console.log('ID Ingreso Detalle:', animalSele ? animalSele.id : 'No seleccionado')
+        setShowAnimalForm(true)//mostrar el formulario al seleccionar un animal
+    }
+
+    const handleChange = (e) => {
+        const { name, value } = e.target
+        setFormData({
+            ...formData,
+            [name]: value
+        })
+
+        if(name === "dictamen" && value === 'AC'){
+            setFormDictamen(true)
+        }else {
+            setFormDictamen(false)
+        }
+    }
+
+    const HandleSubmit = (e) => {
+        e.preventDefault()
+
+        console.log('Datos enviados: ', formData)
+
+        try{
+            axios.post('/api/guia-transporte', formData)
+            console.log('Respuesta del servidor', response.data)
+            Swal.fire({
+                title: 'Guia de transporte creada con exito',
+                position: 'center',
+                icon: 'success',
+                showConfirmButton: 'false',
+                timer: 1500
+            })
+            setFormData({
+                id_ingreso_detalle: '',
+                carne_octavos: '',
+                viseras_blancas: '',
+                viseras_rojas: '',
+                cabezas: '',
+                temperatura_promedio: '',
+                dictamen: '',
+            })
+            setSelectedEstablecimiento('');
+            setIngresoDetalles([]);
+        } catch (error) {
+            console.log('Error al enviar del servidor', response.data)
+            Swal.fire({
+                title: 'Error al crear la Guia de Transporte',
+                position: 'center',
+                icon: 'error',
+                showCloseButton: 'false',
+                timer: 1500
+            })
+            setFormData({
+                id_ingreso_detalle: '',
+                carne_octavos: '',
+                viseras_blancas: '',
+                viseras_rojas: '',
+                cabezas: '',
+                temperatura_promedio: '',
+                dictamen: '',
+            })
+            setSelectedEstablecimiento('');
+            setIngresoDetalles([]);
+        }
     }
 
     return (
@@ -90,9 +170,8 @@ export default function guiatransporte(props) {
                             </Typography>
                         <Box
                         class="p-5 flex flex-row space-x-9 h-auto w-full items-start "
-                        /*component="form"
-                        onSubmit={}*/
                         sx={{maxWidth: 600, mx: 'auto', mt: 4}}>
+
                             <FormControl
                             variant="filled"
                             fullWidth
@@ -102,14 +181,15 @@ export default function guiatransporte(props) {
                                 <Select
                                 label="Destino"
                                 value={selectedEstablecimiento}
-                                onChange={handleChange}
+                                onChange={handleEstablecimientoChange}
+                                required
                                 >
                                     <MenuItem value="">
                                         <em>Seleccione un Destino</em>
                                     </MenuItem>
                                 {establecimientos.map(establecimiento => (
                                         <MenuItem key = {establecimiento.id} value={establecimiento.id}>
-                                            {establecimiento.marca_diferencial} {establecimiento.nombre_dueno}
+                                            {establecimiento.id}-{establecimiento.marca_diferencial}-{establecimiento.nombre_dueno}
                                         </MenuItem>
                                     ))}
                                 </Select>
@@ -151,93 +231,206 @@ export default function guiatransporte(props) {
                     </div>
 
 
-                            <FormControl variant="filled" fullWidth margin="normal" sx={{maxWidth: 200}}>
+                            <FormControl
+                            variant="filled"
+                            fullWidth
+                            margin="normal"
+                            sx={{maxWidth: 200}}
+                            >
                                 <InputLabel>Animales Disponibles</InputLabel>
                                 <Select
                                 label="Animales Disponibles"
-                                value={selectedAnimal}
-                                onChange={HandleChangeAnimal}
+                                value={selectedAnimal.id || ""}
+                                onChange={handleAnimalChange}
+                                //name="id_ingresos_detalle"
                                 >
                                     <MenuItem value="">
                                         <em>Seleccione un Animal</em>
                                     </MenuItem>
-                                    {animales.map(animal => (
-                                        <MenuItem key={animal.id} value={animal.id}>
-                                            {animal.numero_animal} {animal.sexo === 'Macho' ? 'M' : 'H'}-{animal.peso}K-{animal.numero_tiquete}
+                                    {ingresoDetalles.map(detalle => (
+                                        <MenuItem key={detalle.id} value={detalle.id}>
+                                            {detalle.animal.numero_animal} {detalle.animal.sexo === 'Macho' ? 'M' : 'H'}-{detalle.animal.peso}K-{detalle.animal.numero_tiquete}
                                         </MenuItem>
                                     ))}
                                 </Select>
                             </FormControl>
 
-                            {selectedAnimal && (
+
+                            {selectedAnimal && showAnimalForm && (
                             <div className="bg-white overflow-hidden h-52 shadow-sm sm:rounded-lg flex flex-col items-center">
                                 <Typography variant="h5">Informacio de la guia de Transporte</Typography>
                                 <Box
                                 class="p-5 flex flex-row space-x-9 h-auto w-full items-start "
+                                component="form"
+                                onSubmit={HandleSubmit}
                                 sx={{maxWidth: 1000, mx: 'auto', mt: 4}}>
 
                                     <FormControl fullWidth margin="normal">
-                                        <TextField variant="filled" label="Carne en octavos de canal"/>
+                                        <TextField
+                                        variant="filled"
+                                        label="Carne en octavos de canal"
+                                        value={formData.carne_octavos}
+                                        name="carne_octavos"
+                                        onChange={handleChange}
+                                        type="number"
+                                        />
                                     </FormControl>
 
                                     <FormControl fullWidth margin="normal">
-                                        <TextField variant="filled" label="Viseras Blancas"/>
+                                        <TextField
+                                        variant="filled"
+                                        label="Viseras Blancas"
+                                        value={formData.viseras_blancas}
+                                        name="viseras_blancas"
+                                        onChange={handleChange}
+                                        />
                                     </FormControl>
 
                                     <FormControl fullWidth margin="normal">
-                                        <TextField variant="filled" label="Viseras Rojas"/>
+                                        <TextField
+                                        variant="filled"
+                                        label="Viseras Rojas"
+                                        value={formData.viseras_rojas}
+                                        onChange={handleChange}
+                                        name="viseras_rojas"
+                                        />
                                     </FormControl>
 
                                     <FormControl fullWidth margin="normal">
-                                        <TextField variant="filled" label="Cabezas"/>
+                                        <TextField
+                                        variant="filled"
+                                        label="Cabezas"
+                                        value={formData.cabezas}
+                                        onChange={handleChange}
+                                        name="cabezas"
+                                        />
                                     </FormControl>
 
                                     <FormControl fullWidth margin="normal">
-                                        <TextField variant="filled" label="Temp Promedio"/>
+                                        <TextField
+                                        variant="filled"
+                                        label="Temp Promedio"
+                                        value={formData.temperatura_promedio}
+                                        onChange={handleChange}
+                                        name="temperatura_promedio"
+                                        />
                                     </FormControl>
 
                                     <FormControl fullWidth margin="normal">
-                                        <TextField variant="filled" label="Guia ICA"/>
+                                        <InputLabel>Dictamen</InputLabel>
+                                        <Select
+                                        variant="filled"
+                                        value={formData.dictamen}
+                                        onChange={handleChange}
+                                        name="dictamen"
+                                        >
+                                            <MenuItem value="A">A</MenuItem>
+                                            <MenuItem value="AC">AC</MenuItem>
+                                        </Select>
                                     </FormControl>
 
+                                    <FormControl fullWidth margin="normal">
+                                        <TextField
+                                        variant="filled"
+                                        label="Guia ICA"
+                                        value={selectedAnimal.animal.guia_movilizacion}
+                                        disabled/>
+                                    </FormControl>
+                                    <Button type="submit" variant="contained" color="primary" className="shrink-0">
+                                        Guardar
+                                    </Button>
+                                </Box>
+                            </div>
+                            )}
+
+                            {formDictamen && (
+                            <div className="m-4 bg-white overflow-hidden h-52 shadow-sm sm:rounded-lg flex flex-col items-center">
+                                <Typography variant="h5">Decomisos</Typography>
+                                <Box
+                                class="p-5 flex flex-row space-x-9 h-auto w-full items-start "
+                                component="form"
+                                onSubmit={HandleSubmit}
+                                sx={{maxWidth: 1000, mx: 'auto', mt: 4}}>
+
+                                    <FormControl fullWidth margin="normal">
+                                        <TextField
+                                        variant="filled"
+                                        label="Carne en octavos de canal"
+                                        value={formData.carne_octavos}
+                                        name="carne_octavos"
+                                        onChange={handleChange}
+                                        type="number"
+                                        />
+                                    </FormControl>
+
+                                    <FormControl fullWidth margin="normal">
+                                        <TextField
+                                        variant="filled"
+                                        label="Viseras Blancas"
+                                        value={formData.viseras_blancas}
+                                        name="viseras_blancas"
+                                        onChange={handleChange}
+                                        />
+                                    </FormControl>
+
+                                    <FormControl fullWidth margin="normal">
+                                        <TextField
+                                        variant="filled"
+                                        label="Viseras Rojas"
+                                        value={formData.viseras_rojas}
+                                        onChange={handleChange}
+                                        name="viseras_rojas"
+                                        />
+                                    </FormControl>
+
+                                    <FormControl fullWidth margin="normal">
+                                        <TextField
+                                        variant="filled"
+                                        label="Cabezas"
+                                        value={formData.cabezas}
+                                        onChange={handleChange}
+                                        name="cabezas"
+                                        />
+                                    </FormControl>
+
+                                    <FormControl fullWidth margin="normal">
+                                        <TextField
+                                        variant="filled"
+                                        label="Temp Promedio"
+                                        value={formData.temperatura_promedio}
+                                        onChange={handleChange}
+                                        name="temperatura_promedio"
+                                        />
+                                    </FormControl>
+
+                                    <FormControl fullWidth margin="normal">
+                                        <Select
+                                        variant="filled"
+                                        label='sexo'
+                                        value={formData.dictamen}
+                                        onChange={handleChange}
+                                        name="dictamen"
+                                        >
+                                            <MenuItem value="A">A</MenuItem>
+                                            <MenuItem value="AC">AC</MenuItem>
+                                        </Select>
+                                    </FormControl>
+
+                                    <FormControl fullWidth margin="normal">
+                                        <TextField
+                                        variant="filled"
+                                        label="Guia ICA"
+                                        value={selectedAnimal.animal.guia_movilizacion}
+                                        disabled/>
+                                    </FormControl>
+                                    <Button type="submit" variant="contained" color="primary" className="shrink-0">
+                                        Guardar
+                                    </Button>
                                 </Box>
                             </div>
                             )}
 
 
-                    {/*
-                    {animales.length > 0 && (
-                        <Table>
-                            <TableHead className="bg-[#186fc6]">
-                                <TableRow>
-                                    <TableCell className="" sx={{fontSize: 18}} align="center">Lote-Peso-Tiquete</TableCell>
-                                    <TableCell className="" sx={{fontSize: 18}} align="center">Carne en octavos de canal</TableCell>
-                                    <TableCell className="" sx={{fontSize: 18}} align="center">Viseras Blancas</TableCell>
-                                    <TableCell className="" sx={{fontSize: 18}} align="center">Viseras Rojas</TableCell>
-                                    <TableCell className="" sx={{fontSize: 18}} align="center">Cabezas</TableCell>
-                                    <TableCell className="" sx={{fontSize: 18}} align="center">Temperatura Promedio</TableCell>
-                                    <TableCell className="" sx={{fontSize: 18}} align="center">Dictamen</TableCell>
-                                    <TableCell className="" sx={{fontSize: 18}} align="center">Numero de Guia</TableCell>
-                                </TableRow>
-                            </TableHead>
-                            <TableBody className="border-y-4 divide-y-4 divide-dashed">
-                                {animales.map((animal) => (
-                                    <TableRow key={animal.id}>
-                                        <TableCell className="border-x-4 border-y-4 border-dashed border-gray-300" sx={{fontSize: 18}} align="center">{animal.numero_animal}{animal.sexo === 'Macho' ? 'M' : 'H'}-{animal.peso}K-{animal.numero_tiquete}</TableCell>
-                                        <TableCell className="border-x-4 border-y-4 border-dashed border-gray-300" sx={{fontSize: 18}} align="center"><TextField></TextField></TableCell>
-                                        <TableCell className="border-x-4 border-y-4 border-dashed border-gray-300" sx={{fontSize: 18}} align="center"><TextField defaultValue='1'></TextField></TableCell>
-                                        <TableCell className="border-x-4 border-y-4 border-dashed border-gray-300" sx={{fontSize: 18}} align="center"><TextField defaultValue='1'></TextField></TableCell>
-                                        <TableCell className="border-x-4 border-y-4 border-dashed border-gray-300" sx={{fontSize: 18}} align="center"><TextField defaultValue='1'></TextField></TableCell>
-                                        <TableCell className="border-x-4 border-y-4 border-dashed border-gray-300" sx={{fontSize: 18}} align="center"><TextField defaultValue="39° - 39.5°"></TextField></TableCell>
-                                        <TableCell className="border-x-4 border-y-4 border-dashed border-gray-300" sx={{fontSize: 18}} align="center"><TextField></TextField></TableCell>
-                                        <TableCell className="border-x-4 border-y-4 border-dashed border-gray-300" sx={{fontSize: 18}} align="center">{animal.guia_movilizacion}</TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                        )}
-                            <ToastContainer position="top-right" autoClose={1500} pauseOnHover={false}/>
-                    */}
                 </div>
             </div>
         </AuthenticatedLayout>

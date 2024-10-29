@@ -38,7 +38,6 @@ Route::get('/entradaproducto', function () {
 Route::get('/guiatransporte', function () {
     return Inertia::render('Guiatransporte');
 })->middleware(['auth', 'verified'])->name('guiatransporte');
-//Route::get('/establecimientos', [EstablecimientoController::class, 'index']);
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

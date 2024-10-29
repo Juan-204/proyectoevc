@@ -8,6 +8,7 @@ use App\Models\Establecimiento;
 use Illuminate\Support\Facades\DB;
 use App\Models\Ingreso;
 use App\Models\IngresoDetalle;
+use Carbon\Carbon;
 
 class AnimalController extends Controller
 {
@@ -63,20 +64,30 @@ class AnimalController extends Controller
         return response()->json(['message' => 'Ingreso guardado con exito']);
     }
 
-    public function getAnimalesByEstablecimiento($id){
+    public function AnimalesPorFecha($id)
+    {
+        $hoy = Carbon::now()->format('Y-m-d');
 
-        $hoy = now()->format('Y-m-d');
-
-        $animales = DB::table('ingresos_detalles')
-            ->join('animales', 'ingresos_detalles.id_animales', '=', 'animales.id')
-            ->join('ingresos', 'ingresos_detalles.id_ingresos', '=', 'ingresos.id')
-            ->where('animales.id_establecimiento', $id)
-            ->whereDate('ingresos.fecha', $hoy)
-            ->select('animales.*')
-            ->get();
-
-        //$animales = Animal::where('id_establecimiento', $id)->get();
-        //se devuelve los animales con una respuesta JSON
+        $animales = Animal::where('id_establecimiento', $id)
+            ->whereHas('IngresoDetalles.ingreso', function($query) use ($hoy) {
+                $query->whereDate('fecha', $hoy);
+            })
+            ->with([
+                'ingresoDetalles' => function ($query) use ($hoy) {
+                    $query->whereHas('ingreso', function ($query) use ($hoy) {
+                        $query->whereDate('fecha', $hoy);
+                    });
+                },
+                'IngresoDetalles.ingreso:id'
+            ])
+            ->get()
+            ->map(function ($animal) {
+                return [
+                    'animal' => $animal,
+                    'id_ingreso' => $animal->ingresoDetalles->first()?->ingreso->id,
+                    'id_detalle' => $animal->ingresoDetalles->first()?->id,
+                ];
+            });
         return response()->json($animales);
     }
 }

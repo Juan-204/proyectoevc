@@ -19,7 +19,12 @@ class Ingreso extends Model
 
     public function detalles()
     {
-        return $this->hasMany(IngresoDetalle::class, 'id_ingreso');
+        return $this->hasMany(IngresoDetalle::class, 'id_ingresos');
+    }
+
+    public function animales()
+    {
+        return $this->hasManyThrough(Animal::class, IngresoDetalle::class, 'id_ingresos', 'id', 'id', 'id_animales');
     }
 
 }
