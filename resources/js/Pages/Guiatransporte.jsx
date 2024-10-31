@@ -104,13 +104,13 @@ export default function guiatransporte(props) {
         }
     }
 
-    const HandleSubmit = (e) => {
+    const HandleSubmit = async (e) => {
         e.preventDefault()
 
         console.log('Datos enviados: ', formData)
 
         try{
-            axios.post('/api/guia-transporte', formData)
+            const response = await axios.post('/api/guia-transporte', formData)
             console.log('Respuesta del servidor', response.data)
             Swal.fire({
                 title: 'Guia de transporte creada con exito',
@@ -131,7 +131,7 @@ export default function guiatransporte(props) {
             setSelectedEstablecimiento('');
             setIngresoDetalles([]);
         } catch (error) {
-            console.log('Error al enviar del servidor', response.data)
+            console.log('Error al enviar del servidor', error.response?.data || error.message)
             Swal.fire({
                 title: 'Error al crear la Guia de Transporte',
                 position: 'center',
