@@ -31,8 +31,6 @@ class AnimalController extends Controller
             'animales.*.id_establecimiento' => 'required|exists:establecimiento,id',
         ]);
 
-        //dd($request->all());
-
         //CREAR EL INGRESO
         DB::transaction(function () use ($request) {
 

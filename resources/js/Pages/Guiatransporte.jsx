@@ -27,6 +27,12 @@ export default function guiatransporte(props) {
         temperatura_promedio: '',
         dictamen: '',
     })
+    const [decomisos, setDecomisos] = useState({
+        id_animal: '',
+        producto: '',
+        cantidad: '',
+        motivo: '',
+    })
     const [selectedAnimal, setselectedAnimal] = useState('');
     const [showAnimalForm ,setShowAnimalForm] = useState(false);
 
@@ -80,13 +86,29 @@ export default function guiatransporte(props) {
     //funcion para buscar el animal seleccionado en los detalles de el ingreso
     const handleAnimalChange = (e) => {
         const animalSele = ingresoDetalles.find(animal => animal.id === parseInt(e.target.value))
+
+        if (!animalSele) {
+            console.error('No se encontro el animal seleccionado')
+            setselectedAnimal('');
+            setShowAnimalForm(false)
+            return;
+        }
+
+
         console.log('Animal selecionado', animalSele)
+        console.log('Id del animal seleccionado', animalSele.animal.id)
+
         setselectedAnimal(animalSele)
         setFormData(prevFormData => ({
             ...prevFormData,
             id_ingreso_detalle: animalSele ? animalSele.id : '',
         }))
+        setDecomisos(prevdecomisos => ({
+            ...prevdecomisos,
+            id_animal: animalSele ? animalSele.animal.id : '',
+        }))
         console.log('ID Ingreso Detalle:', animalSele ? animalSele.id : 'No seleccionado')
+        console.log('Id del animal seleccionado', animalSele.animal.id)
         setShowAnimalForm(true)//mostrar el formulario al seleccionar un animal
     }
 
@@ -104,9 +126,18 @@ export default function guiatransporte(props) {
         }
     }
 
+    const handleChangedecomisos = (e) => {
+        const { name, value } = e.target
+        setDecomisos({
+            ...decomisos,
+            [name]: value
+        })
+    }
+
+
+
     const HandleSubmit = async (e) => {
         e.preventDefault()
-
         console.log('Datos enviados: ', formData)
 
         try{
@@ -128,6 +159,8 @@ export default function guiatransporte(props) {
                 temperatura_promedio: '',
                 dictamen: '',
             })
+
+
             setSelectedEstablecimiento('');
             setIngresoDetalles([]);
         } catch (error) {
@@ -152,6 +185,25 @@ export default function guiatransporte(props) {
             setIngresoDetalles([]);
         }
     }
+
+    const HandleSubmitdecomisos = async (e) => {
+        e.preventDefault()
+        console.log('Datos enviados: ', decomisos)
+        try{
+            const response = await axios.post('/api/guardar-decomiso', decomisos)
+            console.log('Respuesta del servidor', response.data)
+            setDecomisos({
+                ...decomisos,
+                producto: '',
+                cantidad: '',
+                motivo: '',
+            })
+            setFormDictamen(false)
+        } catch (error) {
+            console.log('Error al guardar el decomiso', error.response?.data || error.message)
+        }
+    }
+
 
     return (
         <AuthenticatedLayout
@@ -349,80 +401,48 @@ export default function guiatransporte(props) {
                                 <Box
                                 class="p-5 flex flex-row space-x-9 h-auto w-full items-start "
                                 component="form"
-                                onSubmit={HandleSubmit}
+                                onSubmit={HandleSubmitdecomisos}
                                 sx={{maxWidth: 1000, mx: 'auto', mt: 4}}>
 
                                     <FormControl fullWidth margin="normal">
                                         <TextField
                                         variant="filled"
-                                        label="Carne en octavos de canal"
-                                        value={formData.carne_octavos}
-                                        name="carne_octavos"
-                                        onChange={handleChange}
-                                        type="number"
+                                        label="Producto"
+                                        value={decomisos.producto}
+                                        name="producto"
+                                        onChange={handleChangedecomisos}
+                                        type="text"
                                         />
                                     </FormControl>
 
                                     <FormControl fullWidth margin="normal">
                                         <TextField
                                         variant="filled"
-                                        label="Viseras Blancas"
-                                        value={formData.viseras_blancas}
-                                        name="viseras_blancas"
-                                        onChange={handleChange}
-                                        />
-                                    </FormControl>
-
-                                    <FormControl fullWidth margin="normal">
-                                        <TextField
-                                        variant="filled"
-                                        label="Viseras Rojas"
-                                        value={formData.viseras_rojas}
-                                        onChange={handleChange}
-                                        name="viseras_rojas"
-                                        />
-                                    </FormControl>
-
-                                    <FormControl fullWidth margin="normal">
-                                        <TextField
-                                        variant="filled"
-                                        label="Cabezas"
-                                        value={formData.cabezas}
-                                        onChange={handleChange}
-                                        name="cabezas"
-                                        />
-                                    </FormControl>
-
-                                    <FormControl fullWidth margin="normal">
-                                        <TextField
-                                        variant="filled"
-                                        label="Temp Promedio"
-                                        value={formData.temperatura_promedio}
-                                        onChange={handleChange}
-                                        name="temperatura_promedio"
-                                        />
-                                    </FormControl>
-
-                                    <FormControl fullWidth margin="normal">
-                                        <Select
-                                        variant="filled"
-                                        label='sexo'
-                                        value={formData.dictamen}
-                                        onChange={handleChange}
-                                        name="dictamen"
-                                        >
-                                            <MenuItem value="A">A</MenuItem>
-                                            <MenuItem value="AC">AC</MenuItem>
-                                        </Select>
-                                    </FormControl>
-
-                                    <FormControl fullWidth margin="normal">
-                                        <TextField
-                                        variant="filled"
-                                        label="Guia ICA"
-                                        value={selectedAnimal.animal.guia_movilizacion}
+                                        label="# Animal"
+                                        value={selectedAnimal.animal.numero_animal}
                                         disabled/>
                                     </FormControl>
+
+                                    <FormControl fullWidth margin="normal">
+                                        <TextField
+                                        variant="filled"
+                                        label="Cantidad"
+                                        value={decomisos.cantidad}
+                                        name="cantidad"
+                                        onChange={handleChangedecomisos}
+                                        />
+                                    </FormControl>
+
+                                    <FormControl fullWidth margin="normal">
+                                        <TextField
+                                        variant="filled"
+                                        label="Motivo"
+                                        value={decomisos.motivo}
+                                        onChange={handleChangedecomisos}
+                                        name="motivo"
+                                        />
+                                    </FormControl>
+
                                     <Button type="submit" variant="contained" color="primary" className="shrink-0">
                                         Guardar
                                     </Button>
