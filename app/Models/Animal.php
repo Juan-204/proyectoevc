@@ -19,6 +19,7 @@ class Animal extends Model
         'guia_movilizacion',
         'especie',
         'id_establecimiento',
+        'estado'
     ];
 
     public function establecimiento()

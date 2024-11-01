@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Animal;
 use App\Models\GuiaTrasporte;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class GuiaTransporteController extends Controller
 {
@@ -30,6 +32,20 @@ class GuiaTransporteController extends Controller
             'fecha' => now(),
             'id_vehiculo_conductor' => 1
         ]);
+
+
+        Log::info("Id de ingreso detalles". $idIngresoDetalle);
+
+        $animal = Animal::find($idIngresoDetalle);
+        if($animal) {
+            Log::info("Animal encontrado: " . $animal->id);
+            $animal->estado = 'despachado';
+            $animal->save();
+            Log::info("Estado del animal actualizado a: " . $animal->estado);
+        } else {
+            Log::error("Animal no encontrado para ID: " . $idIngresoDetalle);
+            return response()->json(['error' => 'Animal no encontrado'], 404);
+        }
 
         return response()->json([
             'message' => 'Guia de transporte guardada exitosamente',

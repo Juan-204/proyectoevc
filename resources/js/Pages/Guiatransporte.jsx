@@ -9,6 +9,7 @@ import Swal from "sweetalert2";
 
 
 export default function guiatransporte(props) {
+    const [Despachado, setDespachado] = useState(false)
     const [establecimientos, setEstablecimientos] = useState([]);
     const [formDictamen, setFormDictamen] = useState(false)
     const [ingresoDetalles, setIngresoDetalles] = useState([]);
