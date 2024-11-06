@@ -5,52 +5,66 @@ import { useEffect, useState } from "react";
 import axios, { Axios } from "axios";
 import { toast, ToastContainer } from "react-toastify";
 import Swal from "sweetalert2";
+import * as Yup from 'yup';
+import { useForm } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
 
+const schemaGuia = Yup.object().shape({
+    carne_octavos: Yup.number().required("Este campo es requerido"),
+    viseras_blancas: Yup.number().required("Este campo es requerido"),
+    viseras_rojas: Yup.number().required("Este campo es requerido"),
+    cabezas: Yup.number().required("Este campo es requerido"),
+    temperatura_promedio: Yup.string().required("Este campo es requerido"),
+    dictamen: Yup.string().required("Este campo es requerido"),
+})
 
+const schemaDecomiso = Yup.object().shape({
+    producto: Yup.string().required("Este campo es requerido"),
+    cantidad: Yup.number().required("Este campo es requerido"),
+    motivo: Yup.string().required("Este campo es requerido"),
+})
 
 export default function guiatransporte(props) {
-    const [Despachado, setDespachado] = useState(false)
     const [establecimientos, setEstablecimientos] = useState([]);
-    const [formDictamen, setFormDictamen] = useState(false)
     const [ingresoDetalles, setIngresoDetalles] = useState([]);
     const [selectedEstablecimiento, setSelectedEstablecimiento] = useState('');
+    const [selectedAnimal, setselectedAnimal] = useState('');
+    const [showAnimalForm ,setShowAnimalForm] = useState(false);
     const [detallesEstablecimiento, setDetallesEstablecimiento] = useState({
         nombre_dueno: '',
         direccion: '',
         telefono: '',
     })
-    const [formData, setFormData] = useState({
-        id_ingreso_detalle: '',
-        carne_octavos: '',
-        viseras_blancas: '',
-        viseras_rojas: '',
-        cabezas: '',
-        temperatura_promedio: '',
-        dictamen: '',
+    const {register: regGuia , handleSubmit: submitGuia, watch, reset: resetGuia, formState: {errors}} = useForm({
+        resolver: yupResolver(schemaGuia),
+        defaultValues: {
+            id_ingreso_detalle: '',
+            carne_octavos: '',
+            viseras_blancas: '',
+            viseras_rojas: '',
+            cabezas: '',
+            temperatura_promedio: '',
+            dictamen: '',
+        }
     })
-    const [decomisos, setDecomisos] = useState({
-        id_animal: '',
-        producto: '',
-        cantidad: '',
-        motivo: '',
+
+    const {register: regDecomisos , handleSubmit: submitDecomiso, reset: resetDecomiso, formState: {errors: errorsDecomiso}} = useForm({
+        resolver: yupResolver(schemaDecomiso),
+        defaultValues: {
+            id_animal: '',
+            producto: '',
+            cantidad: '',
+            motivo: '',
+        }
     })
-    const [selectedAnimal, setselectedAnimal] = useState('');
-    const [showAnimalForm ,setShowAnimalForm] = useState(false);
+
+    const dictamenSeleccionado = watch('dictamen');
 
     useEffect(() => {
         axios.get('/api/establecimientos')
                 .then(response => setEstablecimientos(response.data))
                 .catch(error => console.error('Error al cargar establecimiento', error))
     }, [])
-
-    const cargarAnimales = (idEstablecimiento) => {
-        axios.get(`/api/animales/establecimiento/${idEstablecimiento}`)
-        .then(response => {
-            console.log('Animales del Establecimiento', response.data);
-            setIngresoDetalles(response.data);
-        })
-        .catch(error => console.error('Error al cargar los animales', error))
-    }
 
     const cargarIngresoDetalles = (idEstablecimiento) => {
         axios.get(`/api/ingreso-detalles?establecimiento=${idEstablecimiento}`)
@@ -65,8 +79,7 @@ export default function guiatransporte(props) {
         const idEstablecimiento = e.target.value;
         setSelectedEstablecimiento(idEstablecimiento)
         cargarIngresoDetalles(idEstablecimiento)
-
-        //cargarAnimales(idEstablecimiento)
+        setShowAnimalForm(false)
 
         const establecimientoSelect = establecimientos.find(est => est.id === parseInt(idEstablecimiento))
         if (establecimientoSelect) {
@@ -95,54 +108,21 @@ export default function guiatransporte(props) {
             return;
         }
 
-
         console.log('Animal selecionado', animalSele)
         console.log('Id del animal seleccionado', animalSele.animal.id)
 
         setselectedAnimal(animalSele)
-        setFormData(prevFormData => ({
-            ...prevFormData,
-            id_ingreso_detalle: animalSele ? animalSele.id : '',
-        }))
-        setDecomisos(prevdecomisos => ({
-            ...prevdecomisos,
-            id_animal: animalSele ? animalSele.animal.id : '',
-        }))
         console.log('ID Ingreso Detalle:', animalSele ? animalSele.id : 'No seleccionado')
         console.log('Id del animal seleccionado', animalSele.animal.id)
         setShowAnimalForm(true)//mostrar el formulario al seleccionar un animal
     }
 
-    const handleChange = (e) => {
-        const { name, value } = e.target
-        setFormData({
-            ...formData,
-            [name]: value
-        })
+    const onSubmitGuia = async (data) => {
 
-        if(name === "dictamen" && value === 'AC'){
-            setFormDictamen(true)
-        }else {
-            setFormDictamen(false)
-        }
-    }
-
-    const handleChangedecomisos = (e) => {
-        const { name, value } = e.target
-        setDecomisos({
-            ...decomisos,
-            [name]: value
-        })
-    }
-
-
-
-    const HandleSubmit = async (e) => {
-        e.preventDefault()
-        console.log('Datos enviados: ', formData)
+        data.id_ingreso_detalle = selectedAnimal.id;
 
         try{
-            const response = await axios.post('/api/guia-transporte', formData)
+            const response = await axios.post('/api/guia-transporte', data)
             console.log('Respuesta del servidor', response.data)
             Swal.fire({
                 title: 'Guia de transporte creada con exito',
@@ -151,17 +131,7 @@ export default function guiatransporte(props) {
                 showConfirmButton: 'false',
                 timer: 1500
             })
-            setFormData({
-                id_ingreso_detalle: '',
-                carne_octavos: '',
-                viseras_blancas: '',
-                viseras_rojas: '',
-                cabezas: '',
-                temperatura_promedio: '',
-                dictamen: '',
-            })
-
-
+            reset();
             setSelectedEstablecimiento('');
             setIngresoDetalles([]);
         } catch (error) {
@@ -173,38 +143,27 @@ export default function guiatransporte(props) {
                 showCloseButton: 'false',
                 timer: 1500
             })
-            setFormData({
-                id_ingreso_detalle: '',
-                carne_octavos: '',
-                viseras_blancas: '',
-                viseras_rojas: '',
-                cabezas: '',
-                temperatura_promedio: '',
-                dictamen: '',
-            })
+            resetGuia()
             setSelectedEstablecimiento('');
             setIngresoDetalles([]);
         }
     }
 
-    const HandleSubmitdecomisos = async (e) => {
-        e.preventDefault()
-        console.log('Datos enviados: ', decomisos)
+    const onSubmitDecomisos = async (data) => {
+
+        data.id_animal = selectedAnimal.animal.id
+        console.log('Datos enviados: ', data)
         try{
-            const response = await axios.post('/api/guardar-decomiso', decomisos)
+            const response = await axios.post('/api/guardar-decomiso', data)
             console.log('Respuesta del servidor', response.data)
-            setDecomisos({
-                ...decomisos,
-                producto: '',
-                cantidad: '',
-                motivo: '',
-            })
-            setFormDictamen(false)
+            toast.success("Decomiso registrado con exito")
+            resetDecomiso();
         } catch (error) {
             console.log('Error al guardar el decomiso', error.response?.data || error.message)
+            toast.error("Error al registrar el decomiso")
+            resetDecomiso();
         }
     }
-
 
     return (
         <AuthenticatedLayout
@@ -283,7 +242,6 @@ export default function guiatransporte(props) {
                         </Box>
                     </div>
 
-
                             <FormControl
                             variant="filled"
                             fullWidth
@@ -295,7 +253,6 @@ export default function guiatransporte(props) {
                                 label="Animales Disponibles"
                                 value={selectedAnimal.id || ""}
                                 onChange={handleAnimalChange}
-                                //name="id_ingresos_detalle"
                                 >
                                     <MenuItem value="">
                                         <em>Seleccione un Animal</em>
@@ -315,17 +272,16 @@ export default function guiatransporte(props) {
                                 <Box
                                 class="p-5 flex flex-row space-x-9 h-auto w-full items-start "
                                 component="form"
-                                onSubmit={HandleSubmit}
+                                onSubmit={submitGuia(onSubmitGuia)}
                                 sx={{maxWidth: 1000, mx: 'auto', mt: 4}}>
 
                                     <FormControl fullWidth margin="normal">
                                         <TextField
                                         variant="filled"
                                         label="Carne en octavos de canal"
-                                        value={formData.carne_octavos}
-                                        name="carne_octavos"
-                                        onChange={handleChange}
                                         type="number"
+                                        {...regGuia('carne_octavos')}
+                                        error={!!errors.carne_octavos}
                                         />
                                     </FormControl>
 
@@ -333,9 +289,8 @@ export default function guiatransporte(props) {
                                         <TextField
                                         variant="filled"
                                         label="Viseras Blancas"
-                                        value={formData.viseras_blancas}
-                                        name="viseras_blancas"
-                                        onChange={handleChange}
+                                        {...regGuia('viseras_blancas')}
+                                        error={!!errors.viseras_blancas}
                                         />
                                     </FormControl>
 
@@ -343,9 +298,8 @@ export default function guiatransporte(props) {
                                         <TextField
                                         variant="filled"
                                         label="Viseras Rojas"
-                                        value={formData.viseras_rojas}
-                                        onChange={handleChange}
-                                        name="viseras_rojas"
+                                        {...regGuia('viseras_rojas')}
+                                        error={!!errors.viseras_rojas}
                                         />
                                     </FormControl>
 
@@ -353,9 +307,8 @@ export default function guiatransporte(props) {
                                         <TextField
                                         variant="filled"
                                         label="Cabezas"
-                                        value={formData.cabezas}
-                                        onChange={handleChange}
-                                        name="cabezas"
+                                        {...regGuia('cabezas')}
+                                        error={!!errors.cabezas}
                                         />
                                     </FormControl>
 
@@ -363,9 +316,8 @@ export default function guiatransporte(props) {
                                         <TextField
                                         variant="filled"
                                         label="Temp Promedio"
-                                        value={formData.temperatura_promedio}
-                                        onChange={handleChange}
-                                        name="temperatura_promedio"
+                                        {...regGuia('temperatura_promedio')}
+                                        error={!!errors.temperatura_promedio}
                                         />
                                     </FormControl>
 
@@ -373,9 +325,8 @@ export default function guiatransporte(props) {
                                         <InputLabel>Dictamen</InputLabel>
                                         <Select
                                         variant="filled"
-                                        value={formData.dictamen}
-                                        onChange={handleChange}
-                                        name="dictamen"
+                                        {...regGuia('dictamen')}
+                                        error={!!errors.dictamen}
                                         >
                                             <MenuItem value="A">A</MenuItem>
                                             <MenuItem value="AC">AC</MenuItem>
@@ -396,23 +347,21 @@ export default function guiatransporte(props) {
                             </div>
                             )}
 
-                            {formDictamen && (
+                            {dictamenSeleccionado === 'AC' && (
                             <div className="m-4 bg-white overflow-hidden h-52 shadow-sm sm:rounded-lg flex flex-col items-center">
                                 <Typography variant="h5">Decomisos</Typography>
                                 <Box
                                 class="p-5 flex flex-row space-x-9 h-auto w-full items-start "
                                 component="form"
-                                onSubmit={HandleSubmitdecomisos}
+                                onSubmit={submitDecomiso(onSubmitDecomisos)}
                                 sx={{maxWidth: 1000, mx: 'auto', mt: 4}}>
 
                                     <FormControl fullWidth margin="normal">
                                         <TextField
                                         variant="filled"
                                         label="Producto"
-                                        value={decomisos.producto}
-                                        name="producto"
-                                        onChange={handleChangedecomisos}
-                                        type="text"
+                                        {...regDecomisos('producto')}
+                                        error={!!errorsDecomiso.producto}
                                         />
                                     </FormControl>
 
@@ -428,9 +377,8 @@ export default function guiatransporte(props) {
                                         <TextField
                                         variant="filled"
                                         label="Cantidad"
-                                        value={decomisos.cantidad}
-                                        name="cantidad"
-                                        onChange={handleChangedecomisos}
+                                        {...regDecomisos('cantidad')}
+                                        error={!!errorsDecomiso.cantidad}
                                         />
                                     </FormControl>
 
@@ -438,9 +386,8 @@ export default function guiatransporte(props) {
                                         <TextField
                                         variant="filled"
                                         label="Motivo"
-                                        value={decomisos.motivo}
-                                        onChange={handleChangedecomisos}
-                                        name="motivo"
+                                        {...regDecomisos('motivo')}
+                                        error={!!errorsDecomiso.motivo}
                                         />
                                     </FormControl>
 
