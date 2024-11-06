@@ -131,7 +131,10 @@ export default function guiatransporte(props) {
                 showConfirmButton: 'false',
                 timer: 1500
             })
-            reset();
+            setShowAnimalForm(false)
+            setselectedAnimal('')
+            resetGuia();
+            resetDecomiso();
             setSelectedEstablecimiento('');
             setIngresoDetalles([]);
         } catch (error) {
@@ -158,6 +161,7 @@ export default function guiatransporte(props) {
             console.log('Respuesta del servidor', response.data)
             toast.success("Decomiso registrado con exito")
             resetDecomiso();
+
         } catch (error) {
             console.log('Error al guardar el decomiso', error.response?.data || error.message)
             toast.error("Error al registrar el decomiso")
