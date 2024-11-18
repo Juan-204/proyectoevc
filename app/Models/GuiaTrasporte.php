@@ -12,24 +12,12 @@ class GuiaTrasporte extends Model
     protected $table = 'guia_trasporte';
 
     protected $fillable = [
-        'id_ingreso_detalle',
         'id_vehiculo_conductor',
         'fecha',
-        'carne_octavos',
-        'viseras_blancas',
-        'viseras_rojas',
-        'cabezas',
-        'temperatura_promedio',
-        'dictamen',
     ];
 
-    public function ingresoDetalle()
+    public function detalles()
     {
-        return $this->belongsTo(ingresoDetalle::class, 'id_ingreso_detalle');
+        return $this->hasMany(GuiaTransporteDetalle::class, 'id_guia_transporte');
     }
-    public function vehiculo()
-    {
-        return $this->belongsTo(Vehiculo::class, 'id_vehiculo_conductor');
-    }
-
 }

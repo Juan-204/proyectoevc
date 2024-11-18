@@ -1,13 +1,14 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head } from "@inertiajs/react";
-import { Box, FormControl,Button,MenuItem, Select, TextField, Typography, InputLabel, Table, TableHead, TableRow, TableCell, TableBody, Paper } from "@mui/material";
+import { Box, FormControl,Button,MenuItem, Select, TextField, Typography, InputLabel, Table, TableHead, TableRow, TableCell, TableBody, Paper, Modal } from "@mui/material";
 import { useEffect, useState } from "react";
 import axios, { Axios } from "axios";
 import { toast, ToastContainer } from "react-toastify";
-import Swal from "sweetalert2";
 import * as Yup from 'yup';
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
+import DecomisoForm from "@/Components/DecomisoForm";
+import Swal from "sweetalert2";
 
 const schemaGuia = Yup.object().shape({
     carne_octavos: Yup.number().required("Este campo es requerido"),
@@ -18,17 +19,14 @@ const schemaGuia = Yup.object().shape({
     dictamen: Yup.string().required("Este campo es requerido"),
 })
 
-const schemaDecomiso = Yup.object().shape({
-    producto: Yup.string().required("Este campo es requerido"),
-    cantidad: Yup.number().required("Este campo es requerido"),
-    motivo: Yup.string().required("Este campo es requerido"),
-})
-
 export default function guiatransporte(props) {
     const [establecimientos, setEstablecimientos] = useState([]);
+    const [guiaData , setGuiaData] = useState([]);
+    const [decomisoData , setDecomisoData] = useState([]);
+    const [tempDataDeco, setTempDataDeco] = useState([]);
     const [ingresoDetalles, setIngresoDetalles] = useState([]);
     const [selectedEstablecimiento, setSelectedEstablecimiento] = useState('');
-    const [selectedAnimal, setselectedAnimal] = useState('');
+    const [selectedAnimal, setselectedAnimal] = useState({});
     const [showAnimalForm ,setShowAnimalForm] = useState(false);
     const [detallesEstablecimiento, setDetallesEstablecimiento] = useState({
         nombre_dueno: '',
@@ -48,17 +46,12 @@ export default function guiatransporte(props) {
         }
     })
 
-    const {register: regDecomisos , handleSubmit: submitDecomiso, reset: resetDecomiso, formState: {errors: errorsDecomiso}} = useForm({
-        resolver: yupResolver(schemaDecomiso),
-        defaultValues: {
-            id_animal: '',
-            producto: '',
-            cantidad: '',
-            motivo: '',
-        }
-    })
-
     const dictamenSeleccionado = watch('dictamen');
+    const [abrir, setAbrir] = useState(false)
+
+    const handleCerrar = () => {
+        setAbrir(false)
+    }
 
     useEffect(() => {
         axios.get('/api/establecimientos')
@@ -98,8 +91,9 @@ export default function guiatransporte(props) {
     }
 
     //funcion para buscar el animal seleccionado en los detalles de el ingreso
-    const handleAnimalChange = (e) => {
+    const handleAnimalChange = async (e) => {
         const animalSele = ingresoDetalles.find(animal => animal.id === parseInt(e.target.value))
+        console.log("animal Seleccionado antes del set", animalSele)
 
         if (!animalSele) {
             console.error('No se encontro el animal seleccionado')
@@ -107,67 +101,112 @@ export default function guiatransporte(props) {
             setShowAnimalForm(false)
             return;
         }
-
-        console.log('Animal selecionado', animalSele)
-        console.log('Id del animal seleccionado', animalSele.animal.id)
-
+        console.log("Animal Seleccionado despues del set",selectedAnimal)
         setselectedAnimal(animalSele)
-        console.log('ID Ingreso Detalle:', animalSele ? animalSele.id : 'No seleccionado')
-        console.log('Id del animal seleccionado', animalSele.animal.id)
+        console.log("Animal Seleccionado despues del set",selectedAnimal)
         setShowAnimalForm(true)//mostrar el formulario al seleccionar un animal
     }
+
+    useEffect(() => {
+        if(selectedAnimal){
+            console.log("Animal seleccionado en el UseEffect:" ,selectedAnimal)
+        }
+    }, [selectedAnimal])
+
+
+    useEffect(() => {
+        if (dictamenSeleccionado === 'AC') {
+            setAbrir(true);
+        } else {
+            setAbrir(false);
+        }
+    }, [dictamenSeleccionado]);
+
+
 
     const onSubmitGuia = async (data) => {
 
         data.id_ingreso_detalle = selectedAnimal.id;
 
-        try{
-            const response = await axios.post('/api/guia-transporte', data)
-            console.log('Respuesta del servidor', response.data)
-            Swal.fire({
-                title: 'Guia de transporte creada con exito',
-                position: 'center',
-                icon: 'success',
-                showConfirmButton: 'false',
-                timer: 1500
-            })
-            setShowAnimalForm(false)
-            setselectedAnimal('')
-            resetGuia();
-            resetDecomiso();
-            setSelectedEstablecimiento('');
-            setIngresoDetalles([]);
-        } catch (error) {
-            console.log('Error al enviar del servidor', error.response?.data || error.message)
-            Swal.fire({
-                title: 'Error al crear la Guia de Transporte',
-                position: 'center',
-                icon: 'error',
-                showCloseButton: 'false',
-                timer: 1500
-            })
-            resetGuia()
-            setSelectedEstablecimiento('');
-            setIngresoDetalles([]);
+        const animalFormat = `${selectedAnimal.animal.numero_animal}${selectedAnimal.animal.sexo === 'Macho' ? 'M' : 'H'}-${selectedAnimal.animal.peso}K-${selectedAnimal.animal.numero_tiquete}`
+        const guiaFormat = {...data, animalInfo: animalFormat}
+        setGuiaData([...guiaData, guiaFormat]);
+
+        if(tempDataDeco.length > 0) {
+            setDecomisoData((prev) => [...prev, ...tempDataDeco])
         }
+
+
+        console.log("Descripcion Añadida", guiaData)
+        setTempDataDeco([])
+        handleCerrar();
+        resetGuia();
+        setShowAnimalForm(false)
+        setselectedAnimal('')
+
     }
 
     const onSubmitDecomisos = async (data) => {
 
         data.id_animal = selectedAnimal.animal.id
-        console.log('Datos enviados: ', data)
-        try{
-            const response = await axios.post('/api/guardar-decomiso', data)
-            console.log('Respuesta del servidor', response.data)
-            toast.success("Decomiso registrado con exito")
-            resetDecomiso();
+        const decomiso = {
+            numero_animal: selectedAnimal.animal.numero_animal,
+            id_animal: selectedAnimal.animal.id,
+            producto: data.producto,
+            cantidad:data.cantidad,
+            motivo: data.motivo,
+        }
+        console.log(decomiso)
+        setTempDataDeco([...tempDataDeco, decomiso])
+    }
 
-        } catch (error) {
-            console.log('Error al guardar el decomiso', error.response?.data || error.message)
-            toast.error("Error al registrar el decomiso")
-            resetDecomiso();
+    const handleGuardarInfoGuia = async () => {
+        try{
+            console.log(guiaData)
+            const response = await axios.post('/api/guia-transporte', {guia_transporte: guiaData})
+            console.log('Guia de transporte guardado con exito', response.data);
+            setGuiaData([])
+
+            if(decomisoData.length >= 0){
+                console.log(decomisoData)
+                const response = await axios.post('/api/guardar-decomiso', {decomisos: decomisoData})
+                console.log('Decomiso Guardado con exito', response.data);
+                setDecomisoData([])
+            }
+
+            Swal.fire({
+                position: "center",
+                icon: "success",
+                title: "Guia de transporte guardad con exito",
+                showConfirmButton: false,
+                timer: 1500
+            })
+
+        }catch (error) {
+            if (error.response){
+                console.error('Errores de validacion', error.response.data.errors)
+                setAnimales([])
+                //mensajes en forma de modal para la aprobacion de el formulario
+                Swal.fire({
+                    position: "center",
+                    icon: "warning",
+                    title: "Error de validacion",
+                    showConfirmButton: false,
+                    timer: 1500
+                })
+            } else {
+                console.error('Error al guardar ingreso', error);
+                Swal.fire({
+                    position: "center",
+                    icon: "warning",
+                    title: "Error al guardar el ingreso",
+                    showConfirmButton: false,
+                    timer: 1500
+                })
+            }
         }
     }
+
 
     return (
         <AuthenticatedLayout
@@ -176,6 +215,13 @@ export default function guiatransporte(props) {
             header={<h2 className="font-semibold text-xl text-gray-800 leading-tight">Guia De Transporte</h2>}
         >
             <ToastContainer position="top-right" autoClose={1500} pauseOnHover={false} />
+            <Modal open={abrir} onClose={handleCerrar}>
+                <Box className="rounded-[5px] flex fixed top-1/2 left-1/2 w-auto h-auto bg-slate-50 -translate-x-1/2 -translate-y-1/2">
+                    <DecomisoForm
+                    selectedAnimal={selectedAnimal}
+                    onSubmitDecomisos={onSubmitDecomisos}/>
+                </Box>
+            </Modal>
             <Head title="Guia de Transporte"/>
             <div className="py-12">
                 <div className="mx-auto sm:px-9 lg:px-8">
@@ -269,7 +315,6 @@ export default function guiatransporte(props) {
                                 </Select>
                             </FormControl>
 
-
                             {selectedAnimal && showAnimalForm && (
                             <div className="bg-white overflow-hidden h-52 shadow-sm sm:rounded-lg flex flex-col items-center">
                                 <Typography variant="h5">Informacio de la guia de Transporte</Typography>
@@ -351,58 +396,77 @@ export default function guiatransporte(props) {
                             </div>
                             )}
 
-                            {dictamenSeleccionado === 'AC' && (
-                            <div className="m-4 bg-white overflow-hidden h-52 shadow-sm sm:rounded-lg flex flex-col items-center">
-                                <Typography variant="h5">Decomisos</Typography>
-                                <Box
-                                class="p-5 flex flex-row space-x-9 h-auto w-full items-start "
-                                component="form"
-                                onSubmit={submitDecomiso(onSubmitDecomisos)}
-                                sx={{maxWidth: 1000, mx: 'auto', mt: 4}}>
-
-                                    <FormControl fullWidth margin="normal">
-                                        <TextField
-                                        variant="filled"
-                                        label="Producto"
-                                        {...regDecomisos('producto')}
-                                        error={!!errorsDecomiso.producto}
-                                        />
-                                    </FormControl>
-
-                                    <FormControl fullWidth margin="normal">
-                                        <TextField
-                                        variant="filled"
-                                        label="# Animal"
-                                        value={selectedAnimal.animal.numero_animal}
-                                        disabled/>
-                                    </FormControl>
-
-                                    <FormControl fullWidth margin="normal">
-                                        <TextField
-                                        variant="filled"
-                                        label="Cantidad"
-                                        {...regDecomisos('cantidad')}
-                                        error={!!errorsDecomiso.cantidad}
-                                        />
-                                    </FormControl>
-
-                                    <FormControl fullWidth margin="normal">
-                                        <TextField
-                                        variant="filled"
-                                        label="Motivo"
-                                        {...regDecomisos('motivo')}
-                                        error={!!errorsDecomiso.motivo}
-                                        />
-                                    </FormControl>
-
-                                    <Button type="submit" variant="contained" color="primary" className="shrink-0">
-                                        Guardar
-                                    </Button>
-                                </Box>
-                            </div>
+                            <Box className="flex flex-row gap-x-10 justify-around">
+                            {guiaData.length > 0 ? (
+                                <Box className="flex flex-col">
+                                <Typography sx={{marginTop: '10px'}}>Descripcion del Producto</Typography>
+                                <Paper sx={{ marginTop: '10px'}}>
+                                <Table>
+                                    <TableHead>
+                                        <TableRow>
+                                            <TableCell>LOTE-PESO-TIQUETE</TableCell>
+                                            <TableCell>Carne en Octavos de Canal</TableCell>
+                                            <TableCell>Viseras Blanas</TableCell>
+                                            <TableCell>Viseras Rojas</TableCell>
+                                            <TableCell>Cabezas</TableCell>
+                                            <TableCell>Temperatura Promedio</TableCell>
+                                            <TableCell>Dicatamen</TableCell>
+                                        </TableRow>
+                                    </TableHead>
+                                    <TableBody>
+                                        {guiaData.map((data, index) => (
+                                            <TableRow key={index}>
+                                                <TableCell>{data.animalInfo}</TableCell>
+                                                <TableCell>{data.carne_octavos}</TableCell>
+                                                <TableCell>{data.viseras_blancas}</TableCell>
+                                                <TableCell>{data.viseras_rojas}</TableCell>
+                                                <TableCell>{data.cabezas}</TableCell>
+                                                <TableCell>{data.temperatura_promedio}</TableCell>
+                                                <TableCell>{data.dictamen}</TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </Paper>
+                            </Box>
+                            ) : (
+                                <Typography sx={{marginTop: '10px'}}>No hay Descripcion del producto para mostrar</Typography>
                             )}
 
+                        {decomisoData.length > 0 ? (
+                            <Box className="flex flex-col">
+                            <Typography sx={{marginTop: '10px'}}>Decomisos</Typography>
+                            <Paper sx={{ marginTop: '10px'}}>
+                            <Table>
+                                <TableHead>
+                                    <TableRow>
+                                        <TableCell># Animal</TableCell>
+                                        <TableCell>Producto</TableCell>
+                                        <TableCell>Cantidad</TableCell>
+                                        <TableCell>Motivo</TableCell>
+                                    </TableRow>
+                                </TableHead>
+                                <TableBody>
+                                    {decomisoData.map((data, index) => (
+                                        <TableRow key={index}>
+                                            <TableCell>{data.numero_animal}</TableCell>
+                                            <TableCell>{data.producto}</TableCell>
+                                            <TableCell>{data.cantidad}</TableCell>
+                                            <TableCell>{data.motivo}</TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                            </Paper>
+                            </Box>
+                        ) : (
+                            <Typography sx={{marginTop: '10px'}}>No hay datos de los decomisos para mostrar</Typography>
+                        )}
+                            </Box>
 
+                        <Button variant="contained" color="primary" onClick={handleGuardarInfoGuia} sx={{mt:2}}>
+                            Guardar Guia
+                        </Button>
                 </div>
             </div>
         </AuthenticatedLayout>

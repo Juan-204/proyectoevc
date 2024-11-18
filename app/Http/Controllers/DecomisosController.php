@@ -11,23 +11,25 @@ class DecomisosController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'id_animal' => 'required|integer|exists:animales,id',
-            'producto' => 'required|string',
-            'cantidad' => 'required|integer',
-            'motivo' => 'required|string',
+            'decomisos' => 'required|array',
+            'decomisos.*.id_animal' => 'required|integer|exists:animales,id',
+            'decomisos.*.producto' => 'required|string',
+            'decomisos.*.cantidad' => 'required|integer',
+            'decomisos.*.motivo' => 'required|string',
         ]);
 
-        $idAnimal = $request->input('id_animal');
-        if (!$idAnimal){
-            return response()->json(['error'=>'ID del animal no proporcionado']);
+        $decomisosdata = [];
+
+        foreach ($request->input('decomisos') as $decomiso){
+            $decomisosdata[] = [
+                'id_animal' => $decomiso['id_animal'],
+                'producto' => $decomiso['producto'],
+                'cantidad' => $decomiso['cantidad'],
+                'motivo' => $decomiso['motivo'],
+            ];
         }
 
-        $decomisos= Decomisos::create([
-            'id_animal' => $idAnimal,
-            'producto' => $request->input('producto'),
-            'cantidad' => $request->input('cantidad'),
-            'motivo' => $request->input('motivo'),
-        ]);
+        $decomisos = Decomisos::insert($decomisosdata);
 
         return response()->json(['success' => 'Decomiso registrado con exito', 'data' => $decomisos], 201);
 
