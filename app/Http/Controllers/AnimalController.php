@@ -6,9 +6,11 @@ use Illuminate\Http\Request;
 use App\Models\Animal;
 use App\Models\Establecimiento;
 use Illuminate\Support\Facades\DB;
+use Barryvdh\DomPDF\Facade\Pdf;
 use App\Models\Ingreso;
 use App\Models\IngresoDetalle;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 
 class AnimalController extends Controller
 {
@@ -31,17 +33,17 @@ class AnimalController extends Controller
             'animales.*.id_establecimiento' => 'required|exists:establecimiento,id',
         ]);
 
-        //CREAR EL INGRESO
-        DB::transaction(function () use ($request) {
 
-            //obtener la fecha actual
-            $hoy = now()->format('Y-m-d');
+        $hoy = now()->format('Y-m-d');
 
-            //verificar si ya existe un ingreso para hoy
+        // Comenzamos la transacción
+        DB::beginTransaction();
+
+        try {
+            // Verificar si ya existe un ingreso para hoy
             $ingreso = Ingreso::whereDate('fecha', $hoy)->first();
 
-            //si no existe, crear un nuevo ingreso
-            if(!$ingreso) {
+            if (!$ingreso) {
                 $ingreso = Ingreso::create([
                     'id_user' => 1,
                     'id_planta' => 1,
@@ -49,18 +51,42 @@ class AnimalController extends Controller
                 ]);
             }
 
-            //agregar los animales al ingreso existente
-            foreach ($request->input('animales') as $animalData)
-            {
+            $animalesData = [];  // Iniciar el array vacío
+
+            foreach ($request->input('animales') as $animalData) {
+                // Crear el animal
                 $animal = Animal::create($animalData);
+                Log::info('Animal creado:', $animal->toArray());
+
+                // Guardar el detalle del ingreso
                 IngresoDetalle::create([
                     'id_ingresos' => $ingreso->id,
                     'id_animales' => $animal->id,
                 ]);
+
+                // Almacenar los datos del animal en el array
+                $animalesData[] = $animal->toArray();
             }
-        });
-        return response()->json(['message' => 'Ingreso guardado con exito']);
+
+            DB::commit();  // Confirmar la transacción
+
+            // Generar el PDF después de la transacción
+            $pdf = Pdf::loadView('pdf.ingreso', ['animales' => $animalesData, 'fecha' => $hoy]);
+
+            return response()->stream(function () use ($pdf) {
+                echo $pdf->output();
+            },  200, [
+                "Content-Type" => "application/pdf",
+                "Content-Disposition" => "inline; filename=ingreso.pdf"
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();  // Si ocurre un error, revertir la transacción
+            Log::error('Error al guardar el ingreso: ' . $e->getMessage());
+            return response()->json(['error' => 'Hubo un error al guardar el ingreso'], 500);
+        }
     }
+
+
 
     public function AnimalesPorFecha($id)
     {

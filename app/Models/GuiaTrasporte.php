@@ -14,10 +14,15 @@ class GuiaTrasporte extends Model
     protected $fillable = [
         'id_vehiculo_conductor',
         'fecha',
+        'id_planta',
     ];
 
     public function detalles()
     {
         return $this->hasMany(GuiaTransporteDetalle::class, 'id_guia_transporte');
+    }
+    public function planta()
+    {
+        return $this->belongsTo(Planta::class, 'id_planta');
     }
 }

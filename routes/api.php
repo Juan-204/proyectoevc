@@ -7,6 +7,7 @@ use App\Http\Controllers\DecomisosController;
 use App\Http\Controllers\EstablecimientoController;
 use App\Http\Controllers\GuiaTransporteController;
 use App\Http\Controllers\IngresoDetalleController;
+use App\Http\Controllers\PlantaController;
 
 /*
 |--------------------------------------------------------------------------
@@ -30,3 +31,4 @@ Route::get('/ingreso-detalles', [IngresoDetalleController::class, 'index']);
 Route::get('/animales/establecimiento/{id}', [AnimalController::class, 'AnimalesPorFecha']);
 Route::get('/animales', [AnimalController::class, 'index']);
 Route::get('/establecimientos', [EstablecimientoController::class, 'index']);
+Route::get('/planta', [PlantaController::class, 'index']);

@@ -10,6 +10,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import DecomisoForm from "@/Components/DecomisoForm";
 import Swal from "sweetalert2";
 
+
 const schemaGuia = Yup.object().shape({
     carne_octavos: Yup.number().required("Este campo es requerido"),
     viseras_blancas: Yup.number().required("Este campo es requerido"),
@@ -21,11 +22,13 @@ const schemaGuia = Yup.object().shape({
 
 export default function guiatransporte(props) {
     const [establecimientos, setEstablecimientos] = useState([]);
+    const [selectedEstablecimiento, setSelectedEstablecimiento] = useState('');
+    const [planta, setPlanta] = useState([]);
+    const [plantaSelected, setPlantaSelected] = useState([]);
     const [guiaData , setGuiaData] = useState([]);
     const [decomisoData , setDecomisoData] = useState([]);
     const [tempDataDeco, setTempDataDeco] = useState([]);
     const [ingresoDetalles, setIngresoDetalles] = useState([]);
-    const [selectedEstablecimiento, setSelectedEstablecimiento] = useState('');
     const [selectedAnimal, setselectedAnimal] = useState({});
     const [showAnimalForm ,setShowAnimalForm] = useState(false);
     const [detallesEstablecimiento, setDetallesEstablecimiento] = useState({
@@ -53,12 +56,26 @@ export default function guiatransporte(props) {
         setAbrir(false)
     }
 
+    //cargar los datos de la planta
+    useEffect(() => {
+        axios.get('/api/planta')
+                .then(response => setPlanta(response.data))
+                .catch(error => console.error('Error al cargar establecimiento', error))
+    }, [])
+
+
+    const HandlePlantaChange = (e) => {
+        setPlantaSelected(e.target.value)
+    }
+
+    //cargar los datos de el establecimiento
     useEffect(() => {
         axios.get('/api/establecimientos')
                 .then(response => setEstablecimientos(response.data))
                 .catch(error => console.error('Error al cargar establecimiento', error))
     }, [])
 
+    //cargar los ingresos por cada establecimineto
     const cargarIngresoDetalles = (idEstablecimiento) => {
         axios.get(`/api/ingreso-detalles?establecimiento=${idEstablecimiento}`)
         .then(response => {
@@ -68,7 +85,27 @@ export default function guiatransporte(props) {
                 .catch(error => console.log('Error al cargar ingreso detalles', error))
     }
 
+
     const handleEstablecimientoChange = (e) => {
+
+        if(guiaData.length > 0 || decomisoData.length > 0 ) {
+            Swal.fire({
+                title: '¿Estas seguro?',
+                text: 'Cambiar el establecimiento descartara los datos actuales',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Si,cambiar',
+                cancelButtonColor: 'No, cancelar'
+            }).then((result) => {
+                if(result.isConfirmed) {
+                    setGuiaData([])
+                    setDecomisoData([])
+                } else {
+                    e.target.value = selectedEstablecimiento
+                }
+            })
+        }
+
         const idEstablecimiento = e.target.value;
         setSelectedEstablecimiento(idEstablecimiento)
         cargarIngresoDetalles(idEstablecimiento)
@@ -89,6 +126,7 @@ export default function guiatransporte(props) {
             })
         }
     }
+
 
     //funcion para buscar el animal seleccionado en los detalles de el ingreso
     const handleAnimalChange = async (e) => {
@@ -135,7 +173,6 @@ export default function guiatransporte(props) {
         if(tempDataDeco.length > 0) {
             setDecomisoData((prev) => [...prev, ...tempDataDeco])
         }
-
 
         console.log("Descripcion Añadida", guiaData)
         setTempDataDeco([])
@@ -252,6 +289,29 @@ export default function guiatransporte(props) {
                                 {establecimientos.map(establecimiento => (
                                         <MenuItem key = {establecimiento.id} value={establecimiento.id}>
                                             {establecimiento.id}-{establecimiento.marca_diferencial}-{establecimiento.nombre_dueno}
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                            </FormControl>
+
+                            <FormControl
+                            variant="filled"
+                            fullWidth
+                            margin='normal'
+                            >
+                                <InputLabel>Planta</InputLabel>
+                                <Select
+                                label="Destino"
+                                value={plantaSelected}
+                                onChange={HandlePlantaChange}
+                                required
+                                >
+                                    <MenuItem value="">
+                                        <em>Seleccione un Destino</em>
+                                    </MenuItem>
+                                {planta.map(item => (
+                                        <MenuItem key = {item.id} value={item.id}>
+                                            {item.nombre}
                                         </MenuItem>
                                     ))}
                                 </Select>

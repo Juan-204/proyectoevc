@@ -1,12 +1,13 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head } from '@inertiajs/react';
-import { Box, TextField, Button, MenuItem, Select, FormControl, InputLabel, Typography, Table, TableHead, TableRow, TableBody, TableCell} from '@mui/material';
+import { Box, TextField, Button, MenuItem, Select, FormControl, InputLabel, Typography, Table, TableHead, TableRow, TableBody, TableCell, IconButton} from '@mui/material';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
 import Swal from 'sweetalert2';
+import { Delete } from '@mui/icons-material';
 
 
 export default function entradaproducto(props) {
@@ -43,9 +44,24 @@ export default function entradaproducto(props) {
 
     //agregar animales en una tabla temporal
     const agregarAnimal = (data) => {
-        setAnimales([...animales, data]);
+
+        const establecimiento = establecimientos.find(est =>
+            parseInt(est.id, 10) === parseInt(data.id_establecimiento, 10)
+        );
+
+        const nuevoAnimal = {
+            ...data,
+            marca_diferencial: establecimiento ? establecimiento.marca_diferencial : "Desconocido",
+        };
+
+        setAnimales([...animales, nuevoAnimal]);
         reset();
     };
+
+    const borrarFila = (id) => {
+        const NuevosDatos = animales.filter((_,i) => i !== id)
+        setAnimales(NuevosDatos)
+    }
 
     const HandleGuardarIngreso = async () => {
         try{
@@ -55,8 +71,13 @@ export default function entradaproducto(props) {
                 numero_tiquete: parseInt(animal.numero_tiquete, 10),
             }));
 
-            const response = await axios.post('/api/guardar-ingreso', {animales: animalesParse})
+            const response = await axios.post('/api/guardar-ingreso', {animales: animalesParse}, {responseType: 'blob'})
             console.log('Ingreso guardado con exito', response.data);
+
+            const url = window.URL.createObjectURL(new Blob([response.data], { type: 'application/pdf'}))
+
+            window.open(url, '_blank')
+
             setAnimales([]);
             reset();
             //mensaje en forma de modal para la confirmacion de el ingreso del registro
@@ -245,18 +266,24 @@ export default function entradaproducto(props) {
                                 <TableCell>Sexo</TableCell>
                                 <TableCell>Guia de movilizacion</TableCell>
                                 <TableCell>Especie</TableCell>
+                                <TableCell>Acciones</TableCell>
                             </TableRow>
                         </TableHead>
                         <TableBody>
                             {animales.map((animal, index) => (
                                 <TableRow key={index}>
-                                    <TableCell>{animal.id_establecimiento}</TableCell>
+                                    <TableCell>{animal.marca_diferencial}</TableCell>
                                     <TableCell>{animal.numero_animal}</TableCell>
                                     <TableCell>{animal.peso}</TableCell>
                                     <TableCell>{animal.numero_tiquete}</TableCell>
                                     <TableCell>{animal.sexo}</TableCell>
                                     <TableCell>{animal.guia_movilizacion}</TableCell>
                                     <TableCell>{animal.especie}</TableCell>
+                                    <TableCell>
+                                        <IconButton onClick={() => borrarFila(index)}>
+                                            <Delete/>
+                                        </IconButton>
+                                    </TableCell>
                                 </TableRow>
                             ))}
                         </TableBody>
