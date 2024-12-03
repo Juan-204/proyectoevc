@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AnimalController;
 use App\Http\Controllers\EstablecimientoController;
+use App\Http\Controllers\PreviewController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -35,12 +36,16 @@ Route::get('/entradaproducto', function () {
     return Inertia::render('Entradaproducto');
 })->middleware(['auth', 'verified'])->name('entradaproducto');
 
-Route::get('/establecimientos', [EstablecimientoController::class, 'index']);
+Route::get('/guiatransporte', function () {
+    return Inertia::render('Guiatransporte');
+})->middleware(['auth', 'verified'])->name('guiatransporte');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
+
+Route::get('/preview', [PreviewController::class, 'show']);
 
 require __DIR__.'/auth.php';

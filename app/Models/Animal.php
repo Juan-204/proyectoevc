@@ -19,12 +19,18 @@ class Animal extends Model
         'guia_movilizacion',
         'especie',
         'id_establecimiento',
+        'estado'
     ];
 
     public function establecimiento()
     {
         return $this->belongsTo(Establecimiento::class, 'id_establecimiento');
     }
-
-
+    public function ingresoDetalles(){
+        return $this->hasMany(IngresoDetalle::class, 'id_animales');
+    }
+    public function decomisos()
+    {
+        return $this->hasMany(Decomisos::class, 'id_animal');
+    }
 }

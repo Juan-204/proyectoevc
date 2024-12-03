@@ -29,5 +29,8 @@ class Establecimiento extends Model
     {
         return $this->hasMany(Ingreso::class, 'id_planta');
     }
-
+    public function municipio()
+    {
+        return $this->belongsTo(Municipio::class, 'municipio_id');
+    }
 }

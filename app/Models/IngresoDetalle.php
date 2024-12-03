@@ -18,13 +18,11 @@ class IngresoDetalle extends Model
 
     public function ingreso()
     {
-        $this->belongsTo(Ingreso::class, 'id_ingreso');
+        return $this->belongsTo(Ingreso::class, 'id_ingresos');
     }
 
     public function animal(){
         return $this->belongsTo(Animal::class, 'id_animales');
     }
-
-
 
 }

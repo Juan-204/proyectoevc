@@ -10,6 +10,6 @@ class EstablecimientoController extends Controller
     //
     public function index()
     {
-        return Establecimiento::all();
+        return response()->json(Establecimiento::all());
     }
 }

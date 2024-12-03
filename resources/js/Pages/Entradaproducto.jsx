@@ -1,12 +1,13 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head } from '@inertiajs/react';
-import { Box, TextField, Button, MenuItem, Select, FormControl, InputLabel, Typography, Table, TableHead, TableRow, TableBody, TableCell} from '@mui/material';
+import { Box, TextField, Button, MenuItem, Select, FormControl, InputLabel, Typography, Table, TableHead, TableRow, TableBody, TableCell, IconButton} from '@mui/material';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
 import Swal from 'sweetalert2';
+import { Delete } from '@mui/icons-material';
 
 
 export default function entradaproducto(props) {
@@ -43,27 +44,40 @@ export default function entradaproducto(props) {
 
     //agregar animales en una tabla temporal
     const agregarAnimal = (data) => {
-        setAnimales([...animales, data]);
-        reset();
 
+        const establecimiento = establecimientos.find(est =>
+            parseInt(est.id, 10) === parseInt(data.id_establecimiento, 10)
+        );
+
+        const nuevoAnimal = {
+            ...data,
+            marca_diferencial: establecimiento ? establecimiento.marca_diferencial : "Desconocido",
+        };
+
+        setAnimales([...animales, nuevoAnimal]);
+        reset();
     };
+
+    const borrarFila = (id) => {
+        const NuevosDatos = animales.filter((_,i) => i !== id)
+        setAnimales(NuevosDatos)
+    }
 
     const HandleGuardarIngreso = async () => {
         try{
-
-            axios.defaults.withCredentials = true;
-            axios.defaults.baseURL = 'http://localhost:8000'
-
-
-
             const animalesParse = animales.map(animal => ({
                 ...animal,
                 peso: parseFloat(animal.peso),
                 numero_tiquete: parseInt(animal.numero_tiquete, 10),
             }));
 
-            const response = await axios.post('/api/guardar-ingreso', {animales: animalesParse})
+            const response = await axios.post('/api/guardar-ingreso', {animales: animalesParse}, {responseType: 'blob'})
             console.log('Ingreso guardado con exito', response.data);
+
+            const url = window.URL.createObjectURL(new Blob([response.data], { type: 'application/pdf'}))
+
+            window.open(url, '_blank')
+
             setAnimales([]);
             reset();
             //mensaje en forma de modal para la confirmacion de el ingreso del registro
@@ -91,7 +105,7 @@ export default function entradaproducto(props) {
                 console.error('Error al guardar ingreso', error);
                 Swal.fire({
                     position: "center",
-                    icon: "success",
+                    icon: "warning",
                     title: "Error al guardar el ingreso",
                     showConfirmButton: false,
                     timer: 1500
@@ -108,16 +122,16 @@ export default function entradaproducto(props) {
             errors={props.errors}
             header={<h2 className="font-semibold text-xl text-gray-800 leading-tight">Entrada Procuto</h2>}
         >
-            <Head title="Entrada Producto" />
+            <Head title="Entrada Producto"/>
             <div className="py-12">
                 <div className="mx-auto sm:px-6 lg:px-8">
-                    <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg flex flex-col items-center">
+                    <div className="bg-white overflow-hidden h-52 shadow-sm sm:rounded-lg flex flex-col items-center">
 
-                        <Typography variant="h4" component="h1" gutterBottom>
+                        <Typography variant="h4" sx={{marginTop: '20px', marginBottom: '0px'}} component="h1" gutterBottom>
                                 Agregar Animal
                             </Typography>
                         <Box
-                        class="p-5 flex flex-row space-x-9 h-auto w-full items-center "
+                        class="p-5 flex flex-row space-x-9 h-auto w-full items-start "
                         component="form"
                         onSubmit={handleSubmit(agregarAnimal)} //maneja el envio del formulario
                         sx={{ maxWidth: 600, mx: 'auto', mt: 4}}>
@@ -147,7 +161,8 @@ export default function entradaproducto(props) {
                             <FormControl
                             variant="filled"
                             fullWidth
-                            margin='normal'>
+                            margin='normal'
+                            >
                                 <TextField
                                     variant='filled'
                                     label="Número de Animal"
@@ -155,6 +170,20 @@ export default function entradaproducto(props) {
                                     error={!!errors.numero_animal}
                                 />
                                 {errors.numero_animal && <Typography color="error" >{errors.numero_animal.message}</Typography>}
+                            </FormControl>
+
+                            <FormControl variant='filled'  fullWidth margin="normal">
+                                <InputLabel>Sexo</InputLabel>
+                                <Select
+                                    variant='filled'
+                                    label="Sexo"
+                                    {...register('sexo')}
+                                    error={!!errors.sexo}
+                                >
+                                    <MenuItem value="Macho">Macho</MenuItem>
+                                    <MenuItem value="Hembra">Hembra</MenuItem>
+                                </Select>
+                                {errors.sexo && <Typography color="error">{errors.sexo.message}</Typography>}
                             </FormControl>
 
                             <FormControl
@@ -184,20 +213,6 @@ export default function entradaproducto(props) {
                                     error={!!errors.numero_tiquete}
                                 />
                                 {errors.numero_tiquete && <Typography color="error">{errors.numero_tiquete.message}</Typography>}
-                            </FormControl>
-
-                            <FormControl variant='filled'  fullWidth margin="normal">
-                                <InputLabel>Sexo</InputLabel>
-                                <Select
-                                    variant='filled'
-                                    label="Sexo"
-                                    {...register('sexo')}
-                                    error={!!errors.sexo}
-                                >
-                                    <MenuItem value="Macho">Macho</MenuItem>
-                                    <MenuItem value="Hembra">Hembra</MenuItem>
-                                </Select>
-                                {errors.sexo && <Typography color="error">{errors.sexo.message}</Typography>}
                             </FormControl>
 
                             <FormControl
@@ -251,18 +266,24 @@ export default function entradaproducto(props) {
                                 <TableCell>Sexo</TableCell>
                                 <TableCell>Guia de movilizacion</TableCell>
                                 <TableCell>Especie</TableCell>
+                                <TableCell>Acciones</TableCell>
                             </TableRow>
                         </TableHead>
                         <TableBody>
                             {animales.map((animal, index) => (
                                 <TableRow key={index}>
-                                    <TableCell>{animal.id_establecimiento}</TableCell>
+                                    <TableCell>{animal.marca_diferencial}</TableCell>
                                     <TableCell>{animal.numero_animal}</TableCell>
                                     <TableCell>{animal.peso}</TableCell>
                                     <TableCell>{animal.numero_tiquete}</TableCell>
                                     <TableCell>{animal.sexo}</TableCell>
                                     <TableCell>{animal.guia_movilizacion}</TableCell>
                                     <TableCell>{animal.especie}</TableCell>
+                                    <TableCell>
+                                        <IconButton onClick={() => borrarFila(index)}>
+                                            <Delete/>
+                                        </IconButton>
+                                    </TableCell>
                                 </TableRow>
                             ))}
                         </TableBody>
