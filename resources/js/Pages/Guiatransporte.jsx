@@ -10,7 +10,6 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import DecomisoForm from "@/Components/DecomisoForm";
 import Swal from "sweetalert2";
 
-
 const schemaGuia = Yup.object().shape({
     carne_octavos: Yup.number().required("Este campo es requerido"),
     viseras_blancas: Yup.number().required("Este campo es requerido"),
@@ -24,6 +23,10 @@ export default function guiatransporte(props) {
     const [establecimientos, setEstablecimientos] = useState([]);
     const [selectedEstablecimiento, setSelectedEstablecimiento] = useState('');
     const [planta, setPlanta] = useState([]);
+    const [vehiculo, setVehiculo] = useState([]);
+    const [conductor, setConductor] = useState([]);
+    const [vehiculoSelected, setVehiculoSelected] = useState([]);
+    const [conductorSelected, setConductorSelected] = useState([]);
     const [plantaSelected, setPlantaSelected] = useState([]);
     const [guiaData , setGuiaData] = useState([]);
     const [decomisoData , setDecomisoData] = useState([]);
@@ -31,6 +34,8 @@ export default function guiatransporte(props) {
     const [ingresoDetalles, setIngresoDetalles] = useState([]);
     const [selectedAnimal, setselectedAnimal] = useState({});
     const [showAnimalForm ,setShowAnimalForm] = useState(false);
+
+    const [abrir, setAbrir] = useState(false)
     const [detallesEstablecimiento, setDetallesEstablecimiento] = useState({
         nombre_dueno: '',
         direccion: '',
@@ -50,7 +55,6 @@ export default function guiatransporte(props) {
     })
 
     const dictamenSeleccionado = watch('dictamen');
-    const [abrir, setAbrir] = useState(false)
 
     const handleCerrar = () => {
         setAbrir(false)
@@ -61,19 +65,31 @@ export default function guiatransporte(props) {
         axios.get('/api/planta')
                 .then(response => setPlanta(response.data))
                 .catch(error => console.error('Error al cargar establecimiento', error))
-    }, [])
 
+        axios.get('/api/establecimientos')
+                .then(response => setEstablecimientos(response.data))
+                .catch(error => console.error('Error al cargar establecimiento', error))
+
+        axios.get('/api/vehiculos')
+                .then(response => setVehiculo(response.data))
+                .catch(error => console.error('Error al cargar los vehiculos', error))
+
+        axios.get('/api/conductor')
+                .then(response => setConductor(response.data))
+                .catch(error => console.error('Error al cargar los conductores', error))
+    }, [])
 
     const HandlePlantaChange = (e) => {
         setPlantaSelected(e.target.value)
     }
 
-    //cargar los datos de el establecimiento
-    useEffect(() => {
-        axios.get('/api/establecimientos')
-                .then(response => setEstablecimientos(response.data))
-                .catch(error => console.error('Error al cargar establecimiento', error))
-    }, [])
+    const HandleVehiculoChange = (e) => {
+        setVehiculoSelected(e.target.value)
+    }
+
+    const HandleConductorChange = (e) => {
+        setConductorSelected(e.target.value)
+    }
 
     //cargar los ingresos por cada establecimineto
     const cargarIngresoDetalles = (idEstablecimiento) => {
@@ -84,7 +100,6 @@ export default function guiatransporte(props) {
                 })
                 .catch(error => console.log('Error al cargar ingreso detalles', error))
     }
-
 
     const handleEstablecimientoChange = (e) => {
 
@@ -127,30 +142,23 @@ export default function guiatransporte(props) {
         }
     }
 
-
     //funcion para buscar el animal seleccionado en los detalles de el ingreso
     const handleAnimalChange = async (e) => {
         const animalSele = ingresoDetalles.find(animal => animal.id === parseInt(e.target.value))
-        console.log("animal Seleccionado antes del set", animalSele)
-
         if (!animalSele) {
             console.error('No se encontro el animal seleccionado')
             setselectedAnimal('');
             setShowAnimalForm(false)
             return;
         }
-        console.log("Animal Seleccionado despues del set",selectedAnimal)
         setselectedAnimal(animalSele)
-        console.log("Animal Seleccionado despues del set",selectedAnimal)
         setShowAnimalForm(true)//mostrar el formulario al seleccionar un animal
     }
 
     useEffect(() => {
         if(selectedAnimal){
-            console.log("Animal seleccionado en el UseEffect:" ,selectedAnimal)
         }
     }, [selectedAnimal])
-
 
     useEffect(() => {
         if (dictamenSeleccionado === 'AC') {
@@ -160,31 +168,28 @@ export default function guiatransporte(props) {
         }
     }, [dictamenSeleccionado]);
 
-
-
     const onSubmitGuia = async (data) => {
-
         data.id_ingreso_detalle = selectedAnimal.id;
-
         const animalFormat = `${selectedAnimal.animal.numero_animal}${selectedAnimal.animal.sexo === 'Macho' ? 'M' : 'H'}-${selectedAnimal.animal.peso}K-${selectedAnimal.animal.numero_tiquete}`
-        const guiaFormat = {...data, animalInfo: animalFormat}
+        const guiaFormat = {
+            ...data,
+            animalInfo: animalFormat,
+            planta: plantaSelected,
+            decomisos: tempDataDeco,
+            animalDetails: selectedAnimal
+        }
         setGuiaData([...guiaData, guiaFormat]);
-
         if(tempDataDeco.length > 0) {
             setDecomisoData((prev) => [...prev, ...tempDataDeco])
         }
-
-        console.log("Descripcion Añadida", guiaData)
         setTempDataDeco([])
         handleCerrar();
         resetGuia();
         setShowAnimalForm(false)
         setselectedAnimal('')
-
     }
 
     const onSubmitDecomisos = async (data) => {
-
         data.id_animal = selectedAnimal.animal.id
         const decomiso = {
             numero_animal: selectedAnimal.animal.numero_animal,
@@ -199,17 +204,19 @@ export default function guiatransporte(props) {
 
     const handleGuardarInfoGuia = async () => {
         try{
-            console.log(guiaData)
-            const response = await axios.post('/api/guia-transporte', {guia_transporte: guiaData})
-            console.log('Guia de transporte guardado con exito', response.data);
-            setGuiaData([])
-
-            if(decomisoData.length >= 0){
-                console.log(decomisoData)
-                const response = await axios.post('/api/guardar-decomiso', {decomisos: decomisoData})
-                console.log('Decomiso Guardado con exito', response.data);
-                setDecomisoData([])
+            const dataToSend = {
+                planta: plantaSelected,
+                id_vehiculo: vehiculoSelected,
+                id_conductores: conductorSelected,
+                guia_transporte: guiaData,
             }
+
+            const response = await axios.post('/api/guia-transporte', dataToSend, {responseType: 'blob'})
+            setGuiaData([])
+            setDecomisoData([])
+
+            const url = window.URL.createObjectURL(new Blob([response.data], { type: 'application/pdf'}))
+            window.open(url, '_blank')
 
             Swal.fire({
                 position: "center",
@@ -244,7 +251,6 @@ export default function guiatransporte(props) {
         }
     }
 
-
     return (
         <AuthenticatedLayout
             auth={props.auth}
@@ -262,13 +268,13 @@ export default function guiatransporte(props) {
             <Head title="Guia de Transporte"/>
             <div className="py-12">
                 <div className="mx-auto sm:px-9 lg:px-8">
-                    <div className="bg-white overflow-hidden h-52 shadow-sm sm:rounded-lg flex flex-col items-center">
+                    <div className="bg-white overflow-hidden h-auto shadow-sm sm:rounded-lg flex flex-col items-center">
 
                         <Typography variant="h4" sx={{marginTop: '20px', marginBottom: '0px'}} component="h1" gutterBottom>
                             Guia Transporte
                             </Typography>
                         <Box
-                        class="p-5 flex flex-row space-x-9 h-auto w-full items-start "
+                        class="p-5 flex flex-row space-x-9 h-auto w-full items-start"
                         sx={{maxWidth: 600, mx: 'auto', mt: 4}}>
 
                             <FormControl
@@ -289,29 +295,6 @@ export default function guiatransporte(props) {
                                 {establecimientos.map(establecimiento => (
                                         <MenuItem key = {establecimiento.id} value={establecimiento.id}>
                                             {establecimiento.id}-{establecimiento.marca_diferencial}-{establecimiento.nombre_dueno}
-                                        </MenuItem>
-                                    ))}
-                                </Select>
-                            </FormControl>
-
-                            <FormControl
-                            variant="filled"
-                            fullWidth
-                            margin='normal'
-                            >
-                                <InputLabel>Planta</InputLabel>
-                                <Select
-                                label="Destino"
-                                value={plantaSelected}
-                                onChange={HandlePlantaChange}
-                                required
-                                >
-                                    <MenuItem value="">
-                                        <em>Seleccione un Destino</em>
-                                    </MenuItem>
-                                {planta.map(item => (
-                                        <MenuItem key = {item.id} value={item.id}>
-                                            {item.nombre}
                                         </MenuItem>
                                     ))}
                                 </Select>
@@ -350,8 +333,79 @@ export default function guiatransporte(props) {
                                 />
                             </FormControl>
                         </Box>
-                    </div>
 
+                        <Box
+                        className="p-5 flex flex-row space-x-9 h-auto w-full items-start">
+                            <FormControl
+                            variant="filled"
+                            fullWidth
+                            margin='normal'
+                            >
+                                <InputLabel>Planta</InputLabel>
+                                <Select
+                                label="Destino"
+                                value={plantaSelected}
+                                onChange={HandlePlantaChange}
+                                required
+                                >
+                                    <MenuItem value="">
+                                        <em>Seleccione un Destino</em>
+                                    </MenuItem>
+                                {planta.map(item => (
+                                        <MenuItem key = {item.id} value={item.id}>
+                                            {item.nombre}
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                            </FormControl>
+
+                            <FormControl
+                            variant="filled"
+                            fullWidth
+                            margin='normal'
+                            >
+                                <InputLabel>Vehiculos</InputLabel>
+                                <Select
+                                label="Destino"
+                                value={vehiculoSelected}
+                                onChange={HandleVehiculoChange}
+                                required
+                                >
+                                    <MenuItem value="">
+                                        <em>Seleccione un Vehiculo</em>
+                                    </MenuItem>
+                                {vehiculo.map(item => (
+                                        <MenuItem key = {item.id} value={item.id}>
+                                            {item.placa}
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                            </FormControl>
+
+                            <FormControl
+                            variant="filled"
+                            fullWidth
+                            margin='normal'
+                            >
+                                <InputLabel>Conductores</InputLabel>
+                                <Select
+                                label="Destino"
+                                value={conductorSelected}
+                                onChange={HandleConductorChange}
+                                required
+                                >
+                                    <MenuItem value="">
+                                        <em>Seleccione un Conductor</em>
+                                    </MenuItem>
+                                {conductor.map(item => (
+                                        <MenuItem key = {item.id} value={item.id}>
+                                            {item.nombre}
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                            </FormControl>
+                        </Box>
+                    </div>
                             <FormControl
                             variant="filled"
                             fullWidth

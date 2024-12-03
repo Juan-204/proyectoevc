@@ -25,4 +25,8 @@ class GuiaTrasporte extends Model
     {
         return $this->belongsTo(Planta::class, 'id_planta');
     }
+    public function vehiculoConductor()
+    {
+        return $this->belongsTo(VehiculoConductor::class, 'id_vehiculo_conductor');
+    }
 }

@@ -18,6 +18,6 @@ class Decomisos extends Model
         'motivo',
     ];
     public function animal(){
-        return $this->belongsTo(Animal::class, 'id_animales');
+        return $this->belongsTo(Animal::class, 'id_animal');
     }
 }

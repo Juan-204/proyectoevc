@@ -22,4 +22,8 @@ class Planta extends Model
     {
         return $this->hasMany(GuiaTrasporte::class, 'id_planta');
     }
+    public function municipio()
+    {
+        return $this->belongsTo(Municipio::class, 'id_municipio');
+    }
 }

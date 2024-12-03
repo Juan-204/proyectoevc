@@ -8,6 +8,8 @@ use App\Http\Controllers\EstablecimientoController;
 use App\Http\Controllers\GuiaTransporteController;
 use App\Http\Controllers\IngresoDetalleController;
 use App\Http\Controllers\PlantaController;
+use App\Http\Controllers\VehiculoConductor;
+use App\Http\Controllers\VehiculoConductorController;
 
 /*
 |--------------------------------------------------------------------------
@@ -32,3 +34,5 @@ Route::get('/animales/establecimiento/{id}', [AnimalController::class, 'Animales
 Route::get('/animales', [AnimalController::class, 'index']);
 Route::get('/establecimientos', [EstablecimientoController::class, 'index']);
 Route::get('/planta', [PlantaController::class, 'index']);
+Route::get('/vehiculos', [VehiculoConductorController::class, 'indexVehi']);
+Route::get('/conductor', [VehiculoConductorController::class, 'indexCondu']);

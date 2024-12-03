@@ -14,5 +14,6 @@ class Vehiculo extends Model
     protected $fillable =[
         'placa',
         'tipo_refrigeracion',
+        'tipo_vehiculo'
     ];
 }

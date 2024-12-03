@@ -29,6 +29,8 @@ class Animal extends Model
     public function ingresoDetalles(){
         return $this->hasMany(IngresoDetalle::class, 'id_animales');
     }
-
-
+    public function decomisos()
+    {
+        return $this->hasMany(Decomisos::class, 'id_animal');
+    }
 }
