@@ -7,12 +7,14 @@ import { useForm } from 'react-hook-form';
 import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
 import Swal from 'sweetalert2';
-import { Delete } from '@mui/icons-material';
+import { Delete, Edit } from '@mui/icons-material';
+import Loading from '@/Components/Loading';
 
 
 export default function entradaproducto(props) {
     const [animales, setAnimales] = useState([]); //tabla temporal de animales
     const [establecimientos, setEstablecimientos] = useState([]);
+    const [loading, setLoading] = useState('')
 
     //obtenemos los establecimientos para visualizarlos mediante un dropdown
     useEffect(() => {
@@ -63,7 +65,16 @@ export default function entradaproducto(props) {
         setAnimales(NuevosDatos)
     }
 
+    const editarFila = (index, updatedData) => {
+        setAnimales((prevAnimales) =>
+            prevAnimales.map((animal, i) =>
+                i === index ? {...animal, ...updatedData} : animal
+            )
+        )
+    }
+
     const HandleGuardarIngreso = async () => {
+        setLoading(true)
         try{
             const animalesParse = animales.map(animal => ({
                 ...animal,
@@ -111,12 +122,11 @@ export default function entradaproducto(props) {
                     timer: 1500
                 })
             }
+        } finally {
+            setLoading(false)
         }
     };
-
-
     return (
-
         <AuthenticatedLayout
             auth={props.auth}
             errors={props.errors}
@@ -283,6 +293,9 @@ export default function entradaproducto(props) {
                                         <IconButton onClick={() => borrarFila(index)}>
                                             <Delete/>
                                         </IconButton>
+                                        <IconButton onClick={() => editarFila(index)}>
+                                            <Edit />
+                                        </IconButton>
                                     </TableCell>
                                 </TableRow>
                             ))}
@@ -292,7 +305,7 @@ export default function entradaproducto(props) {
                     <Button variant="contained" color="primary" onClick={HandleGuardarIngreso} sx={{mt:2}}>
                         Guardar Ingreso
                     </Button>
-
+                    <Loading  />
                 </div>
             </div>
         </AuthenticatedLayout>

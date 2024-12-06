@@ -9,6 +9,7 @@ import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import DecomisoForm from "@/Components/DecomisoForm";
 import Swal from "sweetalert2";
+import Loading from '../Components/Loading';
 
 const schemaGuia = Yup.object().shape({
     carne_octavos: Yup.number().required("Este campo es requerido"),
@@ -21,7 +22,6 @@ const schemaGuia = Yup.object().shape({
 
 export default function guiatransporte(props) {
     const [establecimientos, setEstablecimientos] = useState([]);
-    const [selectedEstablecimiento, setSelectedEstablecimiento] = useState('');
     const [planta, setPlanta] = useState([]);
     const [vehiculo, setVehiculo] = useState([]);
     const [conductor, setConductor] = useState([]);
@@ -34,6 +34,8 @@ export default function guiatransporte(props) {
     const [ingresoDetalles, setIngresoDetalles] = useState([]);
     const [selectedAnimal, setselectedAnimal] = useState({});
     const [showAnimalForm ,setShowAnimalForm] = useState(false);
+    const [selectedEstablecimiento, setSelectedEstablecimiento] = useState('');
+    const [loading, setLoading] = useState('');
 
     const [abrir, setAbrir] = useState(false)
     const [detallesEstablecimiento, setDetallesEstablecimiento] = useState({
@@ -201,55 +203,79 @@ export default function guiatransporte(props) {
         console.log(decomiso)
         setTempDataDeco([...tempDataDeco, decomiso])
     }
-
     const handleGuardarInfoGuia = async () => {
-        try{
+        setLoading(true);
+
+        // Validación inicial: si hay datos sin guardar (tempDataDeco), mostrar alerta y detener la función
+        if (tempDataDeco.length > 0) {
+            Swal.fire({
+                title: '¿Estás seguro?',
+                text: 'Tienes datos sin guardar, guárdalos primero.',
+                icon: 'warning',
+                showCancelButton: false,
+                showConfirmButton: false,
+                timer: 1500,
+            }).then(() => {
+                setLoading(false); // Detener carga
+            });
+            return; // Detener ejecución si hay datos pendientes
+        }
+
+        try {
+            // Datos a enviar al backend
             const dataToSend = {
                 planta: plantaSelected,
                 id_vehiculo: vehiculoSelected,
                 id_conductores: conductorSelected,
                 guia_transporte: guiaData,
-            }
+            };
 
-            const response = await axios.post('/api/guia-transporte', dataToSend, {responseType: 'blob'})
-            setGuiaData([])
-            setDecomisoData([])
+            // Envío al backend
+            const response = await axios.post('/api/guia-transporte', dataToSend, { responseType: 'blob' });
 
-            const url = window.URL.createObjectURL(new Blob([response.data], { type: 'application/pdf'}))
-            window.open(url, '_blank')
+            // Limpieza de datos locales tras éxito
+            setGuiaData([]);
+            setDecomisoData([]);
 
+            // Generar PDF solo si la respuesta es exitosa
+            const url = window.URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }));
+            window.open(url, '_blank');
+
+            // Mostrar mensaje de éxito
             Swal.fire({
                 position: "center",
                 icon: "success",
-                title: "Guia de transporte guardad con exito",
+                title: "Guía de transporte guardada con éxito",
                 showConfirmButton: false,
-                timer: 1500
-            })
+                timer: 1500,
+            });
+        } catch (error) {
+            // Manejo de errores
+            if (error.response) {
+                console.error('Errores de validación', error.response.data.errors);
 
-        }catch (error) {
-            if (error.response){
-                console.error('Errores de validacion', error.response.data.errors)
-                setAnimales([])
-                //mensajes en forma de modal para la aprobacion de el formulario
                 Swal.fire({
                     position: "center",
                     icon: "warning",
-                    title: "Error de validacion",
+                    title: "Error de validación",
                     showConfirmButton: false,
-                    timer: 1500
-                })
+                    timer: 1500,
+                });
             } else {
                 console.error('Error al guardar ingreso', error);
+
                 Swal.fire({
                     position: "center",
-                    icon: "warning",
+                    icon: "error",
                     title: "Error al guardar el ingreso",
                     showConfirmButton: false,
-                    timer: 1500
-                })
+                    timer: 1500,
+                });
             }
+        } finally {
+            setLoading(false);
         }
-    }
+    };
 
     return (
         <AuthenticatedLayout
@@ -581,6 +607,7 @@ export default function guiatransporte(props) {
                         <Button variant="contained" color="primary" onClick={handleGuardarInfoGuia} sx={{mt:2}}>
                             Guardar Guia
                         </Button>
+                        <Loading isVisible={loading} />
                 </div>
             </div>
         </AuthenticatedLayout>
