@@ -13,6 +13,7 @@ return new class extends Migration
      */
     public function up()
     {
+        Schema::dropIfExists('establecimiento');
         Schema::create('establecimiento', function (Blueprint $table) {
             $table->id();
             $table->string('marca_diferencial',50)->nullable();
