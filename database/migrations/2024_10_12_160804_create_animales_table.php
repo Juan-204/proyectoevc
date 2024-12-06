@@ -38,12 +38,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::table('municipio', function (Blueprint $table) {
-            $table->dropForeign('municipio_id_departamento_foreign');
-        });
-
-        Schema::dropIfExists('departamento');
-
         Schema::dropIfExists('animales');
     }
 };
