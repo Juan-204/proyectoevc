@@ -17,6 +17,7 @@ return new class extends Migration
             $table->id();
             $table->string('placa',50);
             $table->string('tipo_refrigeracion', 50)->nullable();
+            $table->string('tipo_vehiculo');
             $table->timestamps();
         });
     }

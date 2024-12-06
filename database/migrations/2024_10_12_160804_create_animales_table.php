@@ -16,12 +16,16 @@ return new class extends Migration
         Schema::create('animales', function (Blueprint $table) {
             $table->id();
             $table->integer('numero_animal')->nullable();
-            $table->integer('lote')->nullable();
             $table->integer('peso')->nullable();
             $table->integer('numero_tiquete')->nullable();
             $table->string('sexo')->nullable();
             $table->string('guia_movilizacion',150)->nullable();
             $table->string('especie')->nullable();
+            $table->foreignId('id_establecimiento')
+                    ->constrained('establecimiento')
+                    ->onUpdate('cascade')
+                    ->onDelete('cascade');
+            $table->string('estado')->nullable();
             $table->timestamps();
         });
     }
