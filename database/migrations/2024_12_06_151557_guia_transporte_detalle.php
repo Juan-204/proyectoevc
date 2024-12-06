@@ -14,6 +14,7 @@ return new class extends Migration
     public function up()
     {
         //
+        Schema::dropIfExists('guia_transporte_detalle');
         Schema::create('animales', function (Blueprint $table){
             $table->id();
             $table->foreignId('id_guia_transporte')

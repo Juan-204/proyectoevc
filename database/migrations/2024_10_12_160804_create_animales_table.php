@@ -13,6 +13,7 @@ return new class extends Migration
      */
     public function up()
     {
+        Schema::dropIfExists('animales');
         Schema::create('animales', function (Blueprint $table) {
             $table->id();
             $table->integer('numero_animal')->nullable();

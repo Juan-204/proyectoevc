@@ -13,6 +13,7 @@ return new class extends Migration
      */
     public function up()
     {
+        Schema::dropIfExists('departamento');
         Schema::create('departamento', function (Blueprint $table) {
             $table->id();
             $table->foreignId('id_pais')->constrained('pais')->onUpdate('cascade')->onDelete('cascade');

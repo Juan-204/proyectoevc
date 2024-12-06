@@ -14,6 +14,7 @@ return new class extends Migration
     public function up()
     {
         //
+        Schema::dropIfExists('guia_transporte');
         Schema::create('animales', function (Blueprint $table){
             $table->id();
             $table->timestamp('fecha')->nullable();

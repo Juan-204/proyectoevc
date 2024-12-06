@@ -13,6 +13,7 @@ return new class extends Migration
      */
     public function up()
     {
+        Schema::dropIfExists('pais');
         Schema::create('pais', function (Blueprint $table) {
             $table->id();
             $table->string('nombre_pais');
