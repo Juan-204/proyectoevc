@@ -30,6 +30,12 @@ return new class extends Migration
      */
     public function down()
     {
+        // Eliminar la clave foránea en `municipio` antes de eliminar `departamento`
+        Schema::table('municipio', function (Blueprint $table) {
+            $table->dropForeign(['id_departamento']); // Asegúrate de usar el nombre correcto de la columna
+        });
+
+        // Ahora elimina la tabla `departamento`
         Schema::dropIfExists('departamento');
     }
 };
