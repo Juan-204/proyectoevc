@@ -30,6 +30,11 @@ return new class extends Migration
      */
     public function down()
     {
+        // En la migración de `municipio`
+    Schema::table('municipio', function (Blueprint $table) {
+        $table->dropForeign('municipio_id_departamento_foreign'); // Eliminar la clave foránea
+    });
+
         Schema::dropIfExists('municipios');
     }
 };
