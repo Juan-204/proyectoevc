@@ -27,6 +27,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 
 Route::post('/guia-transporte', [GuiaTransporteController::class, 'store']);
+
 Route::post('/guardar-ingreso', [AnimalController::class, 'guardarIngreso']);
 Route::post('/guardar-decomiso', [DecomisosController::class, 'store']);
 Route::get('/ingreso-detalles', [IngresoDetalleController::class, 'index']);
