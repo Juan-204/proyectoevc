@@ -26,6 +26,9 @@ COPY . .
 # Instalar las dependencias de Composer
 RUN composer install --no-dev --optimize-autoloader
 
+# Instala dependencias de Node.js y construye el front-end
+RUN npm install && npm run build
+
 # Exponer el puerto en el que Laravel corre por defecto (por ejemplo, 8000)
 EXPOSE 8000
 
