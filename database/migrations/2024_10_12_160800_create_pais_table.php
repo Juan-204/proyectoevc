@@ -13,11 +13,10 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('municipio', function (Blueprint $table) {
+        Schema::dropIfExists('pais');
+        Schema::create('pais', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('id_departamento')->constrained('departamento')->onUpdate('cascade')->onDelete('cascade');
-            $table->string('nombre_municipios');
-            $table->integer('codigo_municipios');
+            $table->string('nombre_pais');
             $table->timestamps();
         });
     }
@@ -29,6 +28,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('municipios');
+        Schema::dropIfExists('pais');
     }
 };

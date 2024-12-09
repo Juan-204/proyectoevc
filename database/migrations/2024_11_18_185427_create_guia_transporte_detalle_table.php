@@ -13,6 +13,7 @@ return new class extends Migration
      */
     public function up()
     {
+        Schema::dropIfExists('guia_transporte_detalle');
         Schema::create('guia_transporte_detalle', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('id_guia_transporte');
