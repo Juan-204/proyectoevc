@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('numero_cedula');
-            $table->integer('telefono');
+            $table->text('telefono');
             $table->string('password');
             $table->rememberToken();
             $table->timestamps();
