@@ -42,4 +42,4 @@ RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cac
 EXPOSE 8000
 
 # Definir el comando para iniciar el servidor de Laravel y ejecutar migraciones
-CMD ["sh", "-c", "php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=8000"]
+CMD ["sh", "-c", "php artisan migrate:rollback && php artisan serve --host=0.0.0.0 --port=8000"]
