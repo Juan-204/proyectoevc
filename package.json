@@ -27,7 +27,7 @@
         "@mui/material": "^6.1.7",
         "react-hook-form": "^7.53.1",
         "react-toastify": "^10.0.6",
-        "sweetalert2": "^11.14.4",
+        "sweetalert2": "^11.6.13",
         "yup": "^1.4.0"
     }
 }
