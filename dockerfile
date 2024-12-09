@@ -6,6 +6,7 @@ RUN apt-get update && apt-get install -y \
     libpng-dev \
     libjpeg-dev \
     libfreetype6-dev \
+    libpq-dev \
     zip \
     git \
     unzip \
@@ -13,10 +14,9 @@ RUN apt-get update && apt-get install -y \
     && curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
     && apt-get install -y nodejs
 
-# Instalar extensiones de PHP necesarias para Laravel
+# Instalar extensiones de PHP necesarias para Laravel y PostgreSQL
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install gd pdo pdo_mysql pdo_pgsql
-
+    && docker-php-ext-install gd pdo pdo_pgsql
 
 # Instalar Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -40,5 +40,5 @@ RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cac
 # Exponer el puerto en el que Laravel corre por defecto (por ejemplo, 8000)
 EXPOSE 8000
 
-# Definir el comando para iniciar el servidor de Laravel y ejecutar migraciones
+# Definir el comando para ejecutar migraciones y levantar el servidor
 CMD ["sh", "-c", "php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=8000"]
