@@ -29,11 +29,15 @@ COPY . .
 # Instalar las dependencias de Composer
 RUN composer install --no-dev --optimize-autoloader
 
-# Instala dependencias de Node.js y construye el front-end
+# Instalar dependencias de Node.js y construir el front-end
 RUN npm install && npm run build
+
+# Configurar permisos para los directorios de almacenamiento y caché
+RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache \
+    && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
 # Exponer el puerto en el que Laravel corre por defecto (por ejemplo, 8000)
 EXPOSE 8000
 
-# Definir el comando para iniciar el servidor de Laravel
-CMD [php artisan migrate --force, "php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
+# Definir el comando para iniciar el servidor de Laravel y ejecutar migraciones
+CMD ["sh", "-c", "php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=8000"]
