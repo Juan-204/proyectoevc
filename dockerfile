@@ -1,14 +1,17 @@
 # Usar una imagen base de PHP con soporte para Laravel
 FROM php:8.3-fpm
 
-# Instalar dependencias del sistema
+# Instalar dependencias del sistema y Node.js
 RUN apt-get update && apt-get install -y \
     libpng-dev \
     libjpeg-dev \
     libfreetype6-dev \
     zip \
     git \
-    unzip
+    unzip \
+    curl \
+    && curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
+    && apt-get install -y nodejs
 
 # Instalar extensiones de PHP necesarias para Laravel
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
