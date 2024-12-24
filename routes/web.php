@@ -40,6 +40,10 @@ Route::get('/guiatransporte', function () {
     return Inertia::render('Guiatransporte');
 })->middleware(['auth', 'verified'])->name('guiatransporte');
 
+Route::get('/gestion', function () {
+    return Inertia::render('Gestion');
+})->middleware(['auth', 'verified'])->name('gestion');
+
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

@@ -13,12 +13,13 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::dropIfExists('pais');
-        Schema::create('pais', function (Blueprint $table) {
-            $table->id();
-            $table->string('nombre_pais');
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('pais')) {
+            Schema::create('pais', function (Blueprint $table) {
+                $table->id();
+                $table->string('nombre_pais');
+                $table->timestamps();
+            });
+        }
     }
 
     /**
@@ -28,6 +29,10 @@ return new class extends Migration
      */
     public function down()
     {
+        Schema::table('departamentos', function (Blueprint $table) {
+            $table->dropForeign('departamento_id_pais_foreign'); // Asegúrate de usar el nombre correcto de la clave foránea
+        });
+
         Schema::dropIfExists('pais');
     }
 };

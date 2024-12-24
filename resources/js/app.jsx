@@ -8,7 +8,7 @@ import 'react-toastify/dist/ReactToastify.css';
 
 const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 axios.defaults.headers.common['X-CSRF-TOKEN'] = csrfToken;
-axios.defaults.baseURL = 'https://proyectoevc.onrender.com';
+//axios.defaults.baseURL = 'https://proyectoevc.onrender.com';
 const appName = window.document.getElementsByTagName('title')[0]?.innerText || 'Laravel';
 
 createInertiaApp({

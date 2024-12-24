@@ -38,6 +38,9 @@ return new class extends Migration
      */
     public function down()
     {
+        Schema::table('decomisos', function (Blueprint $table) {
+            $table->dropForeign('decomisos_ibfk_1'); // Usa el nombre correcto de la clave foránea
+        });
         Schema::dropIfExists('animales');
     }
 };
