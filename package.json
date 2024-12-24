@@ -25,6 +25,7 @@
         "@hookform/resolvers": "^3.9.0",
         "@mui/icons-material": "^6.1.7",
         "@mui/material": "^6.1.7",
+        "@mui/x-data-grid": "^7.23.3",
         "react-hook-form": "^7.53.1",
         "react-toastify": "^10.0.6",
         "sweetalert2": "^11.6.13",

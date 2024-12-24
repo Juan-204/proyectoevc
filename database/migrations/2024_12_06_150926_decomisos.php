@@ -17,7 +17,7 @@ return new class extends Migration
         Schema::dropIfExists('decomisos');
         Schema::create('decomisos', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('id_animales')
+            $table->foreignId('id_animal')
                     ->constrained('animales')
                     ->onUpdate('cascade')
                     ->onDelete('cascade');
@@ -35,6 +35,7 @@ return new class extends Migration
     public function down()
     {
         //
+
         Schema::dropIfExists('decomisos');
     }
 };

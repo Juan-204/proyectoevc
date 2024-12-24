@@ -13,14 +13,15 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::dropIfExists('departamento');
-        Schema::create('departamento', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('id_pais')->constrained('pais')->onUpdate('cascade')->onDelete('cascade');
-            $table->integer('codigo_departamento');
-            $table->string('nombre_departamento');
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('departamento')){
+            Schema::create('departamento', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('id_pais')->constrained('pais')->onUpdate('cascade')->onDelete('cascade');
+                $table->integer('codigo_departamento');
+                $table->string('nombre_departamento');
+                $table->timestamps();
+            });
+        }
     }
 
     /**

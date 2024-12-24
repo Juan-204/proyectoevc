@@ -18,6 +18,7 @@ class Establecimiento extends Model
         'direccion',
         'id_municipio',
         'cedula',
+        'telefono',
     ];
 
     public function animales()
