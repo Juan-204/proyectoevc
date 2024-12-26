@@ -13,4 +13,17 @@ class PlantaController extends Controller
     {
         return response()->json(Planta::all());
     }
+    public function submit(Request $request){
+
+        $validated = $request->validate([
+            'id_municipio' => 'required|integer|exists:municipio,id',
+            'nombre' => 'required|string',
+            'telefono' => 'required|string',
+            'direccion' => 'required|string',
+        ]);
+
+        Planta::create($validated);
+
+        return response()->json(['message' => 'Planta Agregada Correctamente'], 201);
+    }
 }

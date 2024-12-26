@@ -27,5 +27,6 @@ class EstablecimientoController extends Controller
 
         Establecimiento::create($validated);
 
-        return response()->json(['message' => 'Establecimiento agregado correctamente'], 201);    }
+        return response()->json(['message' => 'Establecimiento agregado correctamente'], 201);
+    }
 }

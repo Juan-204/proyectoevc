@@ -1,54 +1,43 @@
-import React, { useEffect, useState } from "react";
-import { useForm, Controller } from "react-hook-form";
-import * as yup from 'yup'
-import { yupResolver } from "@hookform/resolvers/yup";
-import axios from "axios";
+
+import { yupResolver } from '@hookform/resolvers/yup';
+import axios from 'axios';
+import React, { useEffect, useState } from 'react'
+import { useForm } from 'react-hook-form';
+import * as yup from 'yup';
 import { Box, FormControl, TextField, Typography, Button, Autocomplete, } from "@mui/material";
 
+
 const schema = yup.object().shape({
-    marca_diferencial: yup.string().required('La marca diferencial es obligatoria'),
-    nombre_dueno: yup.string().required('El nombre de el dueño es obligatorio'),
-    nombre_establecimiento: yup.string().required('El nombre del establecimiento es obligatorio'),
-    direccion: yup.string().required('la direccion del establecimiento es obligatoria'),
-    cedula: yup.number().typeError('la cedula debe ser un numero').required('la cedula es obligatoria'),
-    telefono: yup.number().typeError('el telefono debe ser un numero').required('el telefono es obligatorio')
+    nombre: yup.string().required('El Nombre es Obligatorio'),
+    telefono: yup.string().required('El Telefono es Obligatorio'),
+    direccion: yup.string().required('La Direccion es Obligatoria'),
 })
 
-const EstablecimientoModal = ({onSave}) => {
+const PlantaModal = ({onSave}) => {
     const [municipios, setMunicipios] = useState([])
     const [departamento, setDepartamento] = useState([])
     const [selectedDepartamento, setSelectedDepartamento] = useState(null)
     const [selectedMunicipio, setSelectedMunicipio] = useState(null)
 
-
     const {register, handleSubmit, reset, formState: {errors}} = useForm({
         resolver: yupResolver(schema),
         defaultValues: {
-            marca_diferencial: '',
-            nombre_dueno: '',
-            nombre_establecimiento: '',
-            direccion: '',
-            cedula: '',
+            nombre: '',
             telefono: '',
+            direccion: '',
         }
     })
 
-
     const onSubmit = async (data) => {
         try {
-            // Agregar el ID del municipio seleccionado a los datos del formulario
-            const formData = { ...data, id_municipio: selectedMunicipio?.id };
-            const response = await axios.post('/api/establecimientoAgg', formData);
-            console.log('Datos guardados:', response.data);
+            const formData = {...data, id_municipio: selectedMunicipio?.id}
+            const response = await axios.post('api/plantaAgg', formData)
 
-            //Llama a onSave para modificar al componente principal
             onSave(response.data)
-
-            reset();
-        } catch (error) {
+        } catch {
             console.error('Error al guardar los datos:', error);
         }
-    };
+    }
 
     useEffect(() => {
         axios.get('/api/departamento')
@@ -64,7 +53,7 @@ const EstablecimientoModal = ({onSave}) => {
         }
     }, [selectedDepartamento])
 
-    return(
+    return (
         <div className="m-4 bg-white overflow-hidden h-auto w-auto shadow-sm sm:rounded-lg flex flex-col items-center">
             <Typography variant="h5">Agregue</Typography>
             <Box
@@ -110,29 +99,20 @@ const EstablecimientoModal = ({onSave}) => {
                 >
                     <TextField
                     variant="filled"
-                    label="Marca Diferencial"
-                    {...register('marca_diferencial')}
-                    error={!!errors.marca_diferencial}
+                    label="Nombre"
+                    {...register('nombre')}
+                    error={!!errors.nombre}
                     />
-                    {errors.marca_diferencial && <span>{errors.marca_diferencial.message}</span>}
+                    {errors.nombre && <span>{errors.nombre.message}</span>}
                 </FormControl>
                 <FormControl fullWidth margin="normal">
                     <TextField
                     variant="filled"
-                    label='Nombre Dueño'
-                    {...register('nombre_dueno')}
-                    error={!!errors.nombre_dueno}
+                    label='Telefono'
+                    {...register('telefono')}
+                    error={!!errors.telefono}
                     />
-                    {errors.nombre_dueno && <span>{errors.nombre_dueno.message}</span>}
-                </FormControl>
-                <FormControl fullWidth margin="normal">
-                    <TextField
-                    variant="filled"
-                    label='Nombre Establecimiento'
-                    {...register('nombre_establecimiento')}
-                    error={!!errors.nombre_establecimiento}
-                    />
-                    {errors.nombre_establecimiento && <span>{errors.nombre_establecimiento.message}</span>}
+                    {errors.telefono && <span>{errors.nombre_dueno.telefono}</span>}
                 </FormControl>
                 <FormControl fullWidth margin="normal">
                     <TextField
@@ -143,24 +123,6 @@ const EstablecimientoModal = ({onSave}) => {
                     />
                     {errors.direccion && <span>{errors.direccion.message}</span>}
                 </FormControl>
-                <FormControl fullWidth margin="normal">
-                    <TextField
-                    variant="filled"
-                    label='Cedula'
-                    {...register('cedula')}
-                    error={!!errors.cedula}
-                    />
-                    {errors.cedula && <span>{errors.cedula.message}</span>}
-                </FormControl>
-                <FormControl fullWidth margin="normal">
-                    <TextField
-                    variant="filled"
-                    label='Telefono'
-                    {...register('telefono')}
-                    error={!!errors.telefono}
-                    />
-                    {errors.telefono && <span>{errors.telefono.message}</span>}
-                </FormControl>
                 <Button sx={{marginTop: 1}} type="submit" variant="contained" color="primary" className="shrink-0">
                     Guardar
                 </Button>
@@ -169,4 +131,4 @@ const EstablecimientoModal = ({onSave}) => {
     )
 }
 
-export default EstablecimientoModal
+export default PlantaModal

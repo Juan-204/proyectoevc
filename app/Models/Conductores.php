@@ -14,6 +14,6 @@ class Conductores extends Model
     protected $fillable = [
         'nombre',
         'telefono',
-        'numero de cedula'
+        'numero_cedula'
     ];
 }
