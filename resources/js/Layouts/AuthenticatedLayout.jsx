@@ -69,10 +69,10 @@ export default function Authenticated({ auth, header, children }) {
 
                                     <Dropdown.Content>
                                         <Dropdown.Link href={route('profile.edit')}>Perfil</Dropdown.Link>
+                                        <Dropdown.Link href={route('gestion')}>Gestion</Dropdown.Link>
                                         <Dropdown.Link href={route('logout')} method="post" as="button">
                                             Cerrar Seccion
                                         </Dropdown.Link>
-                                        <Dropdown.Link href={route('gestion')}>Gestion</Dropdown.Link>
                                     </Dropdown.Content>
                                 </Dropdown>
                             </div>
@@ -121,10 +121,10 @@ export default function Authenticated({ auth, header, children }) {
 
                         <div className="mt-3 space-y-1">
                             <ResponsiveNavLink href={route('profile.edit')}>Profile</ResponsiveNavLink>
+                            <ResponsiveNavLink href={route('gestion')}>Gestion</ResponsiveNavLink>
                             <ResponsiveNavLink method="post" href={route('logout')} as="button">
                                 Cerrar seccion
                             </ResponsiveNavLink>
-                            <ResponsiveNavLink href={route('gestion')}>Gestion</ResponsiveNavLink>
                         </div>
                     </div>
                 </div>
