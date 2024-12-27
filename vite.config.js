@@ -15,5 +15,9 @@ export default defineConfig({
         alias: {
             '@': '/resources/js'
         }
+    },
+    server: {
+        host: 'localhost',
+        port: 5173
     }
 });
