@@ -17,15 +17,7 @@ export default defineConfig({
         }
     },
     server: {
-        host: 'localhost',
+        host: '127.0.0.1',
         port: 5173
     },
-    server: {
-        proxy: {
-          '/': {
-            target: 'http://127.0.0.1:8000', // Cambia al puerto de Laravel
-            changeOrigin: true
-          }
-        }
-      }
 });

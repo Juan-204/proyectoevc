@@ -19,7 +19,7 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => ["https://proyectoevc.test/",'http://localhost:5173', 'http://[::1]:5173'],
+    'allowed_origins' => ['https://proyectoevc.test/'],
 
     'allowed_origins_patterns' => [],
 
