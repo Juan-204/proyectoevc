@@ -3,18 +3,22 @@ import { Head } from '@inertiajs/react';
 import { Box, TextField, Button, MenuItem, Select, FormControl, InputLabel, Typography, Table, TableHead, TableRow, TableBody, TableCell, IconButton} from '@mui/material';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { Form, useForm } from 'react-hook-form';
 import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
 import Swal from 'sweetalert2';
 import { Delete, Edit } from '@mui/icons-material';
 import Loading from '@/Components/Loading';
+import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
+import dayjs from 'dayjs'
 
 
 export default function entradaproducto(props) {
     const [animales, setAnimales] = useState([]); //tabla temporal de animales
     const [establecimientos, setEstablecimientos] = useState([]);
     const [loading, setLoading] = useState('')
+    const [selectedDate, setSelectedDate] = useState(null)
 
     //obtenemos los establecimientos para visualizarlos mediante un dropdown
     useEffect(() => {
@@ -43,6 +47,14 @@ export default function entradaproducto(props) {
     const { register, handleSubmit, reset, formState: {errors}} = useForm({
         resolver: yupResolver(schema)
     })
+
+    const handleDataChange = (date) => {
+        if(date) {
+            const dateString = dayjs(date).format('YYYY-MM-DD')
+            console.log('Fecha Seleccionada', dateString)
+            setSelectedDate(dateString)
+        }
+    }
 
     //agregar animales en una tabla temporal
     const agregarAnimal = (data) => {
@@ -82,7 +94,7 @@ export default function entradaproducto(props) {
                 numero_tiquete: parseInt(animal.numero_tiquete, 10),
             }));
 
-            const response = await axios.post('/api/guardar-ingreso', {animales: animalesParse}, {responseType: 'blob'})
+            const response = await axios.post('/api/guardar-ingreso', {animales: animalesParse, fecha: selectedDate}, {responseType: 'blob'})
             console.log('Ingreso guardado con exito', response.data);
 
             const url = window.URL.createObjectURL(new Blob([response.data], { type: 'application/pdf'}))
@@ -141,10 +153,24 @@ export default function entradaproducto(props) {
                                 Agregar Animal
                             </Typography>
                         <Box
-                        class="p-5 flex flex-row space-x-9 h-auto w-full items-start "
+                        class="p-5 flex flex-row flex-wrap space-x-9 h-auto w-full items-start "
                         component="form"
                         onSubmit={handleSubmit(agregarAnimal)} //maneja el envio del formulario
                         sx={{ maxWidth: 600, mx: 'auto', mt: 4}}>
+
+                            <FormControl
+                            margin='normal'>
+                            <LocalizationProvider dateAdapter={AdapterDayjs}>
+                                <DatePicker
+                                label="Fecha"
+                                value={selectedDate ? dayjs(selectedDate) : null}
+                                onChange={handleDataChange}
+                                renderInput={(params) => <TextField {...params}/>}
+                                format='DD-MM-YYYY'
+                                />
+                            </LocalizationProvider>
+                            </FormControl>
+
                             <FormControl
                             variant='filled'
                             fullWidth

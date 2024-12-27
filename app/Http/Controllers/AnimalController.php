@@ -31,10 +31,11 @@ class AnimalController extends Controller
             'animales.*.guia_movilizacion' => 'nullable|string|max:150',
             'animales.*.especie' => 'nullable|string|max:255',
             'animales.*.id_establecimiento' => 'required|exists:establecimiento,id',
+            'fecha' => 'required|date',
         ]);
 
 
-        $hoy = now()->format('Y-m-d');
+        $hoy = $request->input('fecha');
 
         // Comenzamos la transacción
         DB::beginTransaction();
