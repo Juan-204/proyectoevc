@@ -19,6 +19,11 @@ class AnimalController extends Controller
         return view('animales.index', compact('establecimietos'));
     }
 
+    public function get() {
+        $animal = Animal::all();
+        return response()->json($animal);
+    }
+
     public function GuardarIngreso(Request $request)
     {
 
@@ -121,8 +126,6 @@ class AnimalController extends Controller
         return response()->json($animalesFormat);
     }
 
-
-
     public function AnimalesPorFecha($id)
     {
         $hoy = Carbon::now()->format('Y-m-d');
@@ -149,4 +152,20 @@ class AnimalController extends Controller
             });
         return response()->json($animales);
     }
+
+    public function buscar(Request $request)
+{
+    $query = $request->input('query');
+
+    if (empty($query)) {
+        $animales = Animal::orderBy('id', 'asc')->get();
+    } else {
+        // Realizar la búsqueda utilizando Laravel Scout
+        $animales = Animal::search($query)->get();
+    }
+
+    return response()->json($animales);
+}
+
+
 }

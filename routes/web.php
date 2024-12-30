@@ -1,7 +1,5 @@
 <?php
 
-use App\Http\Controllers\AnimalController;
-use App\Http\Controllers\EstablecimientoController;
 use App\Http\Controllers\PreviewController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
@@ -43,6 +41,10 @@ Route::get('/guiatransporte', function () {
 Route::get('/gestion', function () {
     return Inertia::render('Gestion');
 })->middleware(['auth', 'verified'])->name('gestion');
+
+Route::get('/search', function () {
+    return Inertia::render('Search');
+})->middleware(['auth', 'verified'])->name('search');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
