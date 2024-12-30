@@ -14,6 +14,7 @@ use App\Http\Controllers\PlantaController;
 use App\Http\Controllers\VehiculoConductor;
 use App\Http\Controllers\VehiculoConductorController;
 use App\Http\Controllers\VehiculoController;
+use App\Models\Establecimiento;
 
 /*
 |--------------------------------------------------------------------------
@@ -45,7 +46,14 @@ Route::get('/planta', [PlantaController::class, 'index']);
 Route::get('/vehiculos', [VehiculoConductorController::class, 'indexVehi']);
 Route::get('/conductor', [VehiculoConductorController::class, 'indexCondu']);
 Route::get('/ingreso-detalles', [IngresoDetalleController::class, 'index']);
+Route::get('/animales-fecha', [AnimalController::class, 'getAnimalesPorFecha']);
 //OTROS
 Route::get('/municipios/{departamento}', [MunicipioController::class, 'ObteneMunicipiosPorDepto']);
 Route::get('/animales/establecimiento/{id}', [AnimalController::class, 'AnimalesPorFecha']);
 
+//busquedas
+Route::get('/buscar-animales' ,function (Request $request) {
+    $query = $request->input('query');
+    $resultados = Establecimiento::search($query)->get();
+    return response()->json($resultados);
+});

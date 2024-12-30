@@ -2,14 +2,18 @@ import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head } from "@inertiajs/react";
 import { Box, FormControl,Button,MenuItem, Select, TextField, Typography, InputLabel, Table, TableHead, TableRow, TableCell, TableBody, Paper, Modal } from "@mui/material";
 import { useEffect, useState } from "react";
-import axios, { Axios } from "axios";
-import { toast, ToastContainer } from "react-toastify";
+import axios from "axios";
+import {ToastContainer } from "react-toastify";
 import * as Yup from 'yup';
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import DecomisoForm from "@/Components/DecomisoForm";
 import Swal from "sweetalert2";
-import Loading from '../Components/Loading';
+import Loading from '../Components/LoadingOverlay';
+import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
+import dayjs from 'dayjs'
+import ReusableDataTable from "@/Components/ReusableDataTable";
 
 const schemaGuia = Yup.object().shape({
     carne_octavos: Yup.number().required("Este campo es requerido"),
@@ -36,7 +40,7 @@ export default function guiatransporte(props) {
     const [showAnimalForm ,setShowAnimalForm] = useState(false);
     const [selectedEstablecimiento, setSelectedEstablecimiento] = useState('');
     const [loading, setLoading] = useState('');
-
+    const [selectedDate, setSelectedDate] = useState(null)
     const [abrir, setAbrir] = useState(false)
     const [detallesEstablecimiento, setDetallesEstablecimiento] = useState({
         nombre_dueno: '',
@@ -56,11 +60,39 @@ export default function guiatransporte(props) {
         }
     })
 
+    const columnsInfo = [
+        {field: "animalInfo", headerName: 'LOTE-PESO-TIQUETE', width: 150},
+        {field: "carne_octavos", headerName: 'Carne en Octavos de Canal', width: 150},
+        {field: "viseras_blancas", headerName: 'Viseras Blancas', width: 150},
+        {field: "viseras_rojas", headerName: 'Viseras Rojas', width: 150},
+        {field: "cabezas", headerName: 'Cabezas', width: 150},
+        {field: "temperatura_promedio", headerName: 'Temperatura promedio', width: 150},
+        {field: "dictamen", headerName: 'Dicatamen', width: 150},
+    ]
+
+    const columnsDecomisos = [
+        {field: 'numero_animal', headerName: '# Animal', width: 150},
+        {field: 'producto', headerName: 'Producto', width: 150},
+        {field: 'cantidad', headerName: 'Cantidad', width: 150},
+        {field: 'motivo', headerName: 'Motivo', width: 150},
+    ]
+
     const dictamenSeleccionado = watch('dictamen');
 
     const handleCerrar = () => {
         setAbrir(false)
     }
+
+    const rowInfo = guiaData.map((guia, index) => ({
+        id: index,
+        ...guia
+    }))
+
+    const rowDecomisos = decomisoData.map((decomiso, index) => ({
+        id: index,
+        ...decomiso
+    }))
+
 
     //cargar los datos de la planta
     useEffect(() => {
@@ -93,14 +125,56 @@ export default function guiatransporte(props) {
         setConductorSelected(e.target.value)
     }
 
+
     //cargar los ingresos por cada establecimineto
     const cargarIngresoDetalles = (idEstablecimiento) => {
-        axios.get(`/api/ingreso-detalles?establecimiento=${idEstablecimiento}`)
+        axios.get(`/api/ingreso-detalles?establecimiento=${idEstablecimiento}&fecha=${selectedDate}`)
         .then(response => {
                     console.log('Ingreso Detalles:', response.data)
                     setIngresoDetalles(response.data)
                 })
                 .catch(error => console.log('Error al cargar ingreso detalles', error))
+    }
+
+    useEffect(() => {
+        // Asegúrate de que `selectedEstablecimiento` tenga un valor antes de ejecutar la función
+        if (selectedEstablecimiento) {
+            cargarIngresoDetalles(selectedEstablecimiento); // Ejecutas la función con el id del establecimiento
+        }
+    }, [selectedDate, selectedEstablecimiento]); // El hook depende de ambos valores
+
+
+
+    const handleDataChange = async (date) => {
+        if(date) {
+            const dateString = dayjs(date).format('YYYY-MM-DD')
+            console.log('Fecha Seleccionada', dateString)
+            setSelectedDate(dateString)
+/*
+            setLoading(true);
+            try{
+                const response = await axios.get(`/api/animales-fecha`,{
+                    params: {fecha: dateString},
+                })
+
+                if (response.data && Array.isArray(response.data)) {
+                    setselectedAnimal(response.data)
+                } else {
+                    setselectedAnimal([])
+                }
+            } catch (error) {
+                console.error("Error al obtener los animales por fecha:", error)
+                Swal.fire({
+                    position: "center",
+                    icon: "error",
+                    title: "No se pudieron cargar los animales",
+                    showConfirmButton: false,
+                    timer: 1500
+                })
+            } finally {
+                setLoading(false)
+            }*/
+        }
     }
 
     const handleEstablecimientoChange = (e) => {
@@ -124,6 +198,7 @@ export default function guiatransporte(props) {
         }
 
         const idEstablecimiento = e.target.value;
+
         setSelectedEstablecimiento(idEstablecimiento)
         cargarIngresoDetalles(idEstablecimiento)
         setShowAnimalForm(false)
@@ -224,6 +299,7 @@ export default function guiatransporte(props) {
         try {
             // Datos a enviar al backend
             const dataToSend = {
+                fecha: selectedDate,
                 planta: plantaSelected,
                 id_vehiculo: vehiculoSelected,
                 id_conductores: conductorSelected,
@@ -233,13 +309,14 @@ export default function guiatransporte(props) {
             // Envío al backend
             const response = await axios.post('/api/guia-transporte', dataToSend, { responseType: 'blob' });
 
+            // Generar PDF solo si la respuesta es exitosa
+            const url = window.URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }));
+            window.open(url, '_blank');
+
             // Limpieza de datos locales tras éxito
             setGuiaData([]);
             setDecomisoData([]);
 
-            // Generar PDF solo si la respuesta es exitosa
-            const url = window.URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }));
-            window.open(url, '_blank');
 
             // Mostrar mensaje de éxito
             Swal.fire({
@@ -288,7 +365,9 @@ export default function guiatransporte(props) {
                 <Box className="rounded-[5px] flex fixed top-1/2 left-1/2 w-auto h-auto bg-slate-50 -translate-x-1/2 -translate-y-1/2">
                     <DecomisoForm
                     selectedAnimal={selectedAnimal}
-                    onSubmitDecomisos={onSubmitDecomisos}/>
+                    onSubmitDecomisos={onSubmitDecomisos}
+                    handleCerrar={handleCerrar}
+                    />
                 </Box>
             </Modal>
             <Head title="Guia de Transporte"/>
@@ -302,6 +381,21 @@ export default function guiatransporte(props) {
                         <Box
                         class="p-5 flex flex-row space-x-9 h-auto w-full items-start"
                         sx={{maxWidth: 600, mx: 'auto', mt: 4}}>
+
+                            <FormControl
+                            variant='filled'
+                            fullWidth
+                            margin='normal'>
+                            <LocalizationProvider dateAdapter={AdapterDayjs}>
+                                <DatePicker
+                                label="Fecha"
+                                value={selectedDate ? dayjs(selectedDate) : null}
+                                onChange={handleDataChange}
+                                renderInput={(params) => <TextField {...params}/>}
+                                format='DD-MM-YYYY'
+                                />
+                            </LocalizationProvider>
+                            </FormControl>
 
                             <FormControl
                             variant="filled"
@@ -538,36 +632,15 @@ export default function guiatransporte(props) {
 
                             <Box className="flex flex-row gap-x-10 justify-around">
                             {guiaData.length > 0 ? (
-                                <Box className="flex flex-col">
-                                <Typography sx={{marginTop: '10px'}}>Descripcion del Producto</Typography>
+                            <Box className="flex flex-col">
+                            <Typography sx={{marginTop: '10px'}}>Descripcion del Producto</Typography>
                                 <Paper sx={{ marginTop: '10px'}}>
-                                <Table>
-                                    <TableHead>
-                                        <TableRow>
-                                            <TableCell>LOTE-PESO-TIQUETE</TableCell>
-                                            <TableCell>Carne en Octavos de Canal</TableCell>
-                                            <TableCell>Viseras Blanas</TableCell>
-                                            <TableCell>Viseras Rojas</TableCell>
-                                            <TableCell>Cabezas</TableCell>
-                                            <TableCell>Temperatura Promedio</TableCell>
-                                            <TableCell>Dicatamen</TableCell>
-                                        </TableRow>
-                                    </TableHead>
-                                    <TableBody>
-                                        {guiaData.map((data, index) => (
-                                            <TableRow key={index}>
-                                                <TableCell>{data.animalInfo}</TableCell>
-                                                <TableCell>{data.carne_octavos}</TableCell>
-                                                <TableCell>{data.viseras_blancas}</TableCell>
-                                                <TableCell>{data.viseras_rojas}</TableCell>
-                                                <TableCell>{data.cabezas}</TableCell>
-                                                <TableCell>{data.temperatura_promedio}</TableCell>
-                                                <TableCell>{data.dictamen}</TableCell>
-                                            </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
-                            </Paper>
+                                    <ReusableDataTable
+                                    rows={rowInfo}
+                                    columns={columnsInfo}
+                                    getRowId={(row) => row.id}
+                                    />
+                                </Paper>
                             </Box>
                             ) : (
                                 <Typography sx={{marginTop: '10px'}}>No hay Descripcion del producto para mostrar</Typography>
@@ -576,28 +649,13 @@ export default function guiatransporte(props) {
                         {decomisoData.length > 0 ? (
                             <Box className="flex flex-col">
                             <Typography sx={{marginTop: '10px'}}>Decomisos</Typography>
-                            <Paper sx={{ marginTop: '10px'}}>
-                            <Table>
-                                <TableHead>
-                                    <TableRow>
-                                        <TableCell># Animal</TableCell>
-                                        <TableCell>Producto</TableCell>
-                                        <TableCell>Cantidad</TableCell>
-                                        <TableCell>Motivo</TableCell>
-                                    </TableRow>
-                                </TableHead>
-                                <TableBody>
-                                    {decomisoData.map((data, index) => (
-                                        <TableRow key={index}>
-                                            <TableCell>{data.numero_animal}</TableCell>
-                                            <TableCell>{data.producto}</TableCell>
-                                            <TableCell>{data.cantidad}</TableCell>
-                                            <TableCell>{data.motivo}</TableCell>
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                            </Paper>
+                                <Paper sx={{ marginTop: '10px'}}>
+                                    <ReusableDataTable
+                                    rows={rowDecomisos}
+                                    columns={columnsDecomisos}
+                                    getRowId={(row) => row.id}
+                                    />
+                                </Paper>
                             </Box>
                         ) : (
                             <Typography sx={{marginTop: '10px'}}>No hay datos de los decomisos para mostrar</Typography>

@@ -19,6 +19,7 @@ class GuiaTransporteController extends Controller
 
         // Validación de los datos entrantes
         $request->validate([
+            'fecha' => 'required|date',
             'planta' => 'required|integer|exists:planta,id',
             'id_vehiculo' => 'required|integer|exists:vehiculo,id',
             'id_conductores' => 'required|integer|exists:conductores,id',
@@ -38,6 +39,8 @@ class GuiaTransporteController extends Controller
         ]);
 
         $planta = $request->planta;
+        $fecha = $request->input('fecha');
+
 
         try{
             $vehiculoConductor = VehiculoConductor::firstOrCreate(
@@ -52,7 +55,7 @@ class GuiaTransporteController extends Controller
             );
 
             $guiaTransporte = GuiaTrasporte::create([
-                'fecha' => now(),
+                'fecha' => $fecha,
                 'id_planta' => $planta,
                 'id_vehiculo_conductor' => $vehiculoConductor->id,
             ]);

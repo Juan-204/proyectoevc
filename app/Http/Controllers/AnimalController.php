@@ -69,10 +69,14 @@ class AnimalController extends Controller
                 $animalesData[] = $animal->toArray();
             }
 
+            $animalesTotales = Animal::whereHas('ingresoDetalles.ingreso', function ($query) use ($hoy){
+                $query->whereDate('fecha', $hoy);
+            })->get();
+
             DB::commit();  // Confirmar la transacción
 
             // Generar el PDF después de la transacción
-            $pdf = Pdf::loadView('pdf.ingreso', ['animales' => $animalesData, 'fecha' => $hoy]);
+            $pdf = Pdf::loadView('pdf.ingreso', ['animales' => $animalesTotales, 'fecha' => $hoy]);
 
             return response()->stream(function () use ($pdf) {
                 echo $pdf->output();
@@ -85,6 +89,36 @@ class AnimalController extends Controller
             Log::error('Error al guardar el ingreso: ' . $e->getMessage());
             return response()->json(['error' => 'Hubo un error al guardar el ingreso'], 500);
         }
+    }
+
+    public function getAnimalesPorFecha(Request $request)
+    {
+        $fecha = $request->input('fecha');
+
+        // Validar que la fecha no sea nula
+        if (!$fecha) {
+            return response()->json(['error' => 'Fecha no proporcionada'], 400);
+        }
+
+        // Consultar animales asociados a ingresos en la fecha seleccionada
+        $animales = Animal::whereHas('ingresoDetalles.ingreso', function ($query) use ($fecha) {
+            $query->whereDate('fecha', $fecha);
+        })->with(['ingresoDetalles.ingreso', 'establecimiento'])->get();
+
+        $animalesFormat = $animales->map(function ($animal) {
+            return [
+                'id' => $animal->id,
+                'numero_animal' => $animal->numero_animal,
+                'peso' => $animal->peso,
+                'numero_tiquete' => $animal->numero_tiquete,
+                'sexo' => $animal->sexo,
+                'guia_movilizacion' => $animal->guia_movilizacion,
+                'especie' => $animal->especie,
+                'marca_diferencial' => $animal->establecimiento->marca_diferencial,
+            ];
+        });
+
+        return response()->json($animalesFormat);
     }
 
 

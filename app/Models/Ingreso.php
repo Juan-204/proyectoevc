@@ -17,14 +17,15 @@ class Ingreso extends Model
         'fecha',
     ];
 
-    public function detalles()
-    {
-        return $this->hasMany(IngresoDetalle::class, 'id_ingresos');
-    }
-
     public function animales()
     {
         return $this->hasManyThrough(Animal::class, IngresoDetalle::class, 'id_ingresos', 'id', 'id', 'id_animales');
     }
+
+    public function ingresoDetalles()
+    {
+        return $this->hasMany(IngresoDetalle::class, 'id_ingresos');
+    }
+
 
 }
