@@ -5,6 +5,8 @@ import NavLink from '@/Components/NavLink';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink';
 import { Link } from '@inertiajs/react';
 import { route } from 'ziggy-js';
+import { IconButton } from '@mui/material';
+import { Search } from '@mui/icons-material';
 
 export default function Authenticated({ auth, header, children }) {
     const [showingNavigationDropdown, setShowingNavigationDropdown] = useState(false);
@@ -36,6 +38,13 @@ export default function Authenticated({ auth, header, children }) {
                             <div className="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
                                 <NavLink href={route('guiatransporte')} active={route().current('guiatransporte')}>
                                     Guia de transporte
+                                </NavLink>
+                            </div>
+                            <div className="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
+                                <NavLink href={route('search')} active={route().current('search')}>
+                                    <IconButton>
+                                        <Search></Search>
+                                    </IconButton>
                                 </NavLink>
                             </div>
 

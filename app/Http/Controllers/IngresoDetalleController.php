@@ -11,7 +11,7 @@ class IngresoDetalleController extends Controller
     public function index(Request $request){
         $establecimientoId = $request->query('establecimiento');
 
-        $hoy = now()->format('Y-m-d');
+        $hoy = $request->input('fecha');
 
         $ingresoDetalles = IngresoDetalle::whereHas('animal', function ($query) use ($establecimientoId) {
             $query->where('id_establecimiento', $establecimientoId);

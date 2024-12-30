@@ -1,6 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head } from '@inertiajs/react';
-import { Box, TextField, Button, MenuItem, Select, FormControl, InputLabel, Typography, Table, TableHead, TableRow, TableBody, TableCell, IconButton} from '@mui/material';
+import { Box, TextField, Button, MenuItem, Select, FormControl, InputLabel, Typography, Table, TableHead, TableRow, TableBody, TableCell, IconButton, CircularProgress} from '@mui/material';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
 import { Form, useForm } from 'react-hook-form';
@@ -8,17 +8,44 @@ import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
 import Swal from 'sweetalert2';
 import { Delete, Edit } from '@mui/icons-material';
-import Loading from '@/Components/Loading';
+import LoadingOverlay from '@/Components/LoadingOverlay';
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
 import dayjs from 'dayjs'
-
+import ReusableDataTable from '@/Components/ReusableDataTable';
 
 export default function entradaproducto(props) {
     const [animales, setAnimales] = useState([]); //tabla temporal de animales
     const [establecimientos, setEstablecimientos] = useState([]);
     const [loading, setLoading] = useState('')
     const [selectedDate, setSelectedDate] = useState(null)
+
+    const columns = [
+        {field: 'marca_diferencial', headerName: 'Destino', width: 150},
+        {field: 'numero_animal', headerName: 'Numero de Animal', width: 150},
+        {field: 'peso', headerName: 'Peso', width: 150},
+        {field: 'numero_tiquete', headerName: 'Numero de Tiquete', width: 150},
+        {field: 'sexo', headerName: 'Sexo', width: 150},
+        {field: 'guia_movilizacion', headerName: 'Guia de Movilizacion', width: 150},
+        {field: 'especie', headerName: 'Especie', width: 150},
+        {field: 'acciones', headerName: 'Acciones', width: 150,
+            renderCell: (params) => (
+                <>
+                    <IconButton onClick={() => borrarFila(params.row.id)}>
+                        <Delete/>
+                    </IconButton>
+                    <IconButton onClick={() => editarFila(params.row.id)}>
+                        <Edit/>
+                    </IconButton>
+                </>
+            )
+        },
+    ]
+
+    const rows = animales.map((animal, index) => ({
+        id: index,
+        ...animal,
+    }))
 
     //obtenemos los establecimientos para visualizarlos mediante un dropdown
     useEffect(() => {
@@ -48,11 +75,35 @@ export default function entradaproducto(props) {
         resolver: yupResolver(schema)
     })
 
-    const handleDataChange = (date) => {
+    const handleDataChange = async (date) => {
         if(date) {
             const dateString = dayjs(date).format('YYYY-MM-DD')
             console.log('Fecha Seleccionada', dateString)
             setSelectedDate(dateString)
+
+            setLoading(true);
+            try{
+                const response = await axios.get(`/api/animales-fecha`,{
+                    params: {fecha: dateString},
+                })
+
+                if (response.data && Array.isArray(response.data)) {
+                    setAnimales(response.data)
+                } else {
+                    setAnimales([])
+                }
+            } catch (error) {
+                console.error("Error al obtener los animales por fecha:", error)
+                Swal.fire({
+                    position: "center",
+                    icon: "error",
+                    title: "No se pudieron cargar los animales",
+                    showConfirmButton: false,
+                    timer: 1500
+                })
+            } finally {
+                setLoading(false)
+            }
         }
     }
 
@@ -63,9 +114,21 @@ export default function entradaproducto(props) {
             parseInt(est.id, 10) === parseInt(data.id_establecimiento, 10)
         );
 
+        const existeAnimal = animales.some(animal => animal.numero_animal === parseInt(data.numero_animal, 10));
+
+        if(existeAnimal) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Advertencia',
+                text: 'El animal ya esta agregado en la tabla'
+            })
+            return
+        }
+
         const nuevoAnimal = {
             ...data,
             marca_diferencial: establecimiento ? establecimiento.marca_diferencial : "Desconocido",
+            id_establecimiento: establecimiento.id
         };
 
         setAnimales([...animales, nuevoAnimal]);
@@ -88,10 +151,13 @@ export default function entradaproducto(props) {
     const HandleGuardarIngreso = async () => {
         setLoading(true)
         try{
-            const animalesParse = animales.map(animal => ({
+
+            const nuevosAnimales = animales.filter((animal) => !animal.id)
+            const animalesParse = nuevosAnimales.map(animal => ({
                 ...animal,
                 peso: parseFloat(animal.peso),
                 numero_tiquete: parseInt(animal.numero_tiquete, 10),
+                id_establecimiento: animal.id_establecimiento
             }));
 
             const response = await axios.post('/api/guardar-ingreso', {animales: animalesParse, fecha: selectedDate}, {responseType: 'blob'})
@@ -137,8 +203,11 @@ export default function entradaproducto(props) {
         } finally {
             setLoading(false)
         }
-    };
+    }
+
     return (
+        <>
+        <LoadingOverlay loading={loading} />
         <AuthenticatedLayout
             auth={props.auth}
             errors={props.errors}
@@ -146,19 +215,21 @@ export default function entradaproducto(props) {
         >
             <Head title="Entrada Producto"/>
             <div className="py-12">
-                <div className="mx-auto sm:px-6 lg:px-8">
-                    <div className="bg-white overflow-hidden h-52 shadow-sm sm:rounded-lg flex flex-col items-center">
+                <div className="mx-auto sm:px-6 grid gap-10 lg:px-8">
+                    <div className="bg-white overflow-hidden h-53 shadow-sm sm:rounded-lg flex flex-col items-center">
 
                         <Typography variant="h4" sx={{marginTop: '20px', marginBottom: '0px'}} component="h1" gutterBottom>
                                 Agregar Animal
                             </Typography>
                         <Box
-                        class="p-5 flex flex-row flex-wrap space-x-9 h-auto w-full items-start "
+                        class="p-5 grid grid-cols-4 gap-4 h-auto w-full items-start "
                         component="form"
                         onSubmit={handleSubmit(agregarAnimal)} //maneja el envio del formulario
                         sx={{ maxWidth: 600, mx: 'auto', mt: 4}}>
 
                             <FormControl
+                            variant='filled'
+                            fullWidth
                             margin='normal'>
                             <LocalizationProvider dateAdapter={AdapterDayjs}>
                                 <DatePicker
@@ -292,48 +363,17 @@ export default function entradaproducto(props) {
                         </Box>
                     </div>
 
-                    <Table>
-                        <TableHead>
-                            <TableRow>
-                                <TableCell>Destino</TableCell>
-                                <TableCell>Numero animal</TableCell>
-                                <TableCell>Peso</TableCell>
-                                <TableCell>Numero de tiquete</TableCell>
-                                <TableCell>Sexo</TableCell>
-                                <TableCell>Guia de movilizacion</TableCell>
-                                <TableCell>Especie</TableCell>
-                                <TableCell>Acciones</TableCell>
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            {animales.map((animal, index) => (
-                                <TableRow key={index}>
-                                    <TableCell>{animal.marca_diferencial}</TableCell>
-                                    <TableCell>{animal.numero_animal}</TableCell>
-                                    <TableCell>{animal.peso}</TableCell>
-                                    <TableCell>{animal.numero_tiquete}</TableCell>
-                                    <TableCell>{animal.sexo}</TableCell>
-                                    <TableCell>{animal.guia_movilizacion}</TableCell>
-                                    <TableCell>{animal.especie}</TableCell>
-                                    <TableCell>
-                                        <IconButton onClick={() => borrarFila(index)}>
-                                            <Delete/>
-                                        </IconButton>
-                                        <IconButton onClick={() => editarFila(index)}>
-                                            <Edit />
-                                        </IconButton>
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-
+                    <ReusableDataTable
+                        rows={rows}
+                        columns={columns}
+                        getRowId={(row) => row.id}
+                    />
                     <Button variant="contained" color="primary" onClick={HandleGuardarIngreso} sx={{mt:2}}>
-                        Guardar Ingreso
+                        {loading ? <CircularProgress size={24} color='inherit' /> : "Guardar Ingreso"}
                     </Button>
-                    <Loading  />
                 </div>
             </div>
         </AuthenticatedLayout>
+        </>
     );
 }

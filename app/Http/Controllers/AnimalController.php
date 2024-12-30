@@ -19,6 +19,11 @@ class AnimalController extends Controller
         return view('animales.index', compact('establecimietos'));
     }
 
+    public function get() {
+        $animal = Animal::all();
+        return response()->json($animal);
+    }
+
     public function GuardarIngreso(Request $request)
     {
 
@@ -69,10 +74,14 @@ class AnimalController extends Controller
                 $animalesData[] = $animal->toArray();
             }
 
+            $animalesTotales = Animal::whereHas('ingresoDetalles.ingreso', function ($query) use ($hoy){
+                $query->whereDate('fecha', $hoy);
+            })->get();
+
             DB::commit();  // Confirmar la transacción
 
             // Generar el PDF después de la transacción
-            $pdf = Pdf::loadView('pdf.ingreso', ['animales' => $animalesData, 'fecha' => $hoy]);
+            $pdf = Pdf::loadView('pdf.ingreso', ['animales' => $animalesTotales, 'fecha' => $hoy]);
 
             return response()->stream(function () use ($pdf) {
                 echo $pdf->output();
@@ -87,7 +96,35 @@ class AnimalController extends Controller
         }
     }
 
+    public function getAnimalesPorFecha(Request $request)
+    {
+        $fecha = $request->input('fecha');
 
+        // Validar que la fecha no sea nula
+        if (!$fecha) {
+            return response()->json(['error' => 'Fecha no proporcionada'], 400);
+        }
+
+        // Consultar animales asociados a ingresos en la fecha seleccionada
+        $animales = Animal::whereHas('ingresoDetalles.ingreso', function ($query) use ($fecha) {
+            $query->whereDate('fecha', $fecha);
+        })->with(['ingresoDetalles.ingreso', 'establecimiento'])->get();
+
+        $animalesFormat = $animales->map(function ($animal) {
+            return [
+                'id' => $animal->id,
+                'numero_animal' => $animal->numero_animal,
+                'peso' => $animal->peso,
+                'numero_tiquete' => $animal->numero_tiquete,
+                'sexo' => $animal->sexo,
+                'guia_movilizacion' => $animal->guia_movilizacion,
+                'especie' => $animal->especie,
+                'marca_diferencial' => $animal->establecimiento->marca_diferencial,
+            ];
+        });
+
+        return response()->json($animalesFormat);
+    }
 
     public function AnimalesPorFecha($id)
     {
@@ -115,4 +152,20 @@ class AnimalController extends Controller
             });
         return response()->json($animales);
     }
+
+    public function buscar(Request $request)
+{
+    $query = $request->input('query');
+
+    if (empty($query)) {
+        $animales = Animal::orderBy('id', 'asc')->get();
+    } else {
+        // Realizar la búsqueda utilizando Laravel Scout
+        $animales = Animal::search($query)->get();
+    }
+
+    return response()->json($animales);
+}
+
+
 }

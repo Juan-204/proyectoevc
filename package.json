@@ -28,6 +28,7 @@
         "@mui/x-data-grid": "^7.23.3",
         "@mui/x-date-pickers": "^7.23.3",
         "dayjs": "^1.11.13",
+        "lodash.debounce": "^4.0.8",
         "react-hook-form": "^7.53.1",
         "react-toastify": "^10.0.6",
         "sweetalert2": "^11.6.13",
