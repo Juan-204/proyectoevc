@@ -21,8 +21,8 @@ return new class extends Migration
             $table->string('nombre_establecimiento');
             $table->string('direccion')->nulleable();
             $table->foreignId('id_municipio')->constrained('municipio')->onUpdate('cascade')->onDelete('cascade');
-            $table->integer('cedula')->nullable();
-            $table->integer('telefono')->nullable();
+            $table->string('cedula')->nullable();
+            $table->string('telefono')->nullable();
             $table->timestamps();
         });
     }
