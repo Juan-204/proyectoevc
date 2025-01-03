@@ -7,7 +7,7 @@ import {ToastContainer } from "react-toastify";
 import * as Yup from 'yup';
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import DecomisoForm from "@/Components/DecomisoForm";
+import DecomisoForm from "@/Forms/DecomisoForm";
 import Swal from "sweetalert2";
 import Loading from '../Components/LoadingOverlay';
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';

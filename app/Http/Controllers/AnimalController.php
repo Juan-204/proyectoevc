@@ -154,18 +154,49 @@ class AnimalController extends Controller
     }
 
     public function buscar(Request $request)
-{
-    $query = $request->input('query');
+    {
+        $query = $request->input('query');
 
-    if (empty($query)) {
-        $animales = Animal::orderBy('id', 'asc')->get();
-    } else {
-        // Realizar la búsqueda utilizando Laravel Scout
-        $animales = Animal::search($query)->get();
+        if (empty($query)) {
+            $animales = Animal::orderBy('id', 'asc')->get();
+        } else {
+            // Realizar la búsqueda utilizando Laravel Scout
+            $animales = Animal::search($query)->get();
+        }
+
+        return response()->json($animales);
     }
 
-    return response()->json($animales);
-}
+    public function destroy($id)
+    {
+        try{
+            $animal = Animal::findOrFail($id);
+            $animal->delete();
 
+            return response()->json(['message' => 'Registro eliminado con exito'], 200);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Error al eliminadar el registro'], 200);
+        }
+    }
 
+    public function update($id, Request $request)
+    {
+        $animal = Animal::findOrFail($id);
+
+        $validated = $request->validate([
+            'animales' => 'required|array',
+            'animales.*.numero_animal' => 'required|string',
+            'animales.*.peso' => 'required|integer',
+            'animales.*.numero_tiquete' => 'nullable|integer',
+            'animales.*.sexo' => 'nullable|string|max:255',
+            'animales.*.guia_movilizacion' => 'nullable|string|max:150',
+            'animales.*.especie' => 'nullable|string|max:255',
+            'animales.*.id_establecimiento' => 'required|exists:establecimiento,id',
+        ]);
+
+        $animal->update($validated);
+
+        return response()->json($animal, 200);
+
+    }
 }

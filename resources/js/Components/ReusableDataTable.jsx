@@ -17,6 +17,7 @@ function ReusableDataTable ({ rows, columns, getRowId}) {
             }}
             pageSizeOptions={[5, 10, 20]}
             getRowId={getRowId}
+            rowSelection
             sx={{
                 boxShadow: 2,
                 border: 2,
