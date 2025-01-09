@@ -17,8 +17,8 @@ return new class extends Migration
         Schema::create('conductores', function (Blueprint $table) {
             $table->id();
             $table->string('nombre');
-            $table->integer('telefono')->nullable();
-            $table->integer('numero_cedula')->nullable();
+            $table->string('telefono')->nullable();
+            $table->string('numero_cedula')->nullable();
             $table->timestamps();
         });
     }

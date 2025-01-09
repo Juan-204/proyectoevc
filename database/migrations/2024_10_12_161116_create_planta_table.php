@@ -18,7 +18,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('id_municipio')->constrained('municipio')->onUpdate('cascade')->onDelete('cascade');
             $table->string('nombre');
-            $table->integer('telefono')->nulleable();
+            $table->string('telefono')->nulleable();
             $table->string('direccion')->nulleable();
             $table->timestamps();
         });
