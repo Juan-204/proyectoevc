@@ -21,7 +21,10 @@ class Animal extends Model
         'guia_movilizacion',
         'especie',
         'id_establecimiento',
-        'estado'
+        'estado',
+        'fecha_ingreso',
+        'fecha_guia_ica',
+        'numero_corral',
     ];
 
     public function toSearchableArray()

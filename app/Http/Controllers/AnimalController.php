@@ -36,6 +36,9 @@ class AnimalController extends Controller
             'animales.*.guia_movilizacion' => 'nullable|string|max:150',
             'animales.*.especie' => 'nullable|string|max:255',
             'animales.*.id_establecimiento' => 'required|exists:establecimiento,id',
+            'animales.*.numero_corral' => 'nullable|integer',
+            'animales.*.fecha_ingreso' => 'required|date',
+            'animales.*.fecha_guia_ica' => 'required|date',
             'fecha' => 'required|date',
         ]);
 
@@ -81,7 +84,8 @@ class AnimalController extends Controller
             DB::commit();  // Confirmar la transacción
 
             // Generar el PDF después de la transacción
-            $pdf = Pdf::loadView('pdf.ingreso', ['animales' => $animalesTotales, 'fecha' => $hoy]);
+            $pdf = Pdf::loadView('pdf.ingreso', ['animales' => $animalesTotales, 'fecha' => $hoy])
+                ->setPaper('a4', 'landscape');
 
             return response()->stream(function () use ($pdf) {
                 echo $pdf->output();
@@ -120,6 +124,10 @@ class AnimalController extends Controller
                 'guia_movilizacion' => $animal->guia_movilizacion,
                 'especie' => $animal->especie,
                 'marca_diferencial' => $animal->establecimiento->marca_diferencial,
+                'numero_corral' =>$animal->numero_corral,
+                'fecha_ingreso' =>$animal->fecha_ingreso,
+                'fecha_guia_ica' =>$animal->fecha_guia_ica,
+
             ];
         });
 

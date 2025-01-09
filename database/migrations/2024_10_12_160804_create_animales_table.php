@@ -16,12 +16,15 @@ return new class extends Migration
         Schema::dropIfExists('animales');
         Schema::create('animales', function (Blueprint $table) {
             $table->id();
-            $table->integer('numero_animal')->nullable();
-            $table->integer('peso')->nullable();
-            $table->integer('numero_tiquete')->nullable();
+            $table->bigInteger('numero_animal')->nullable();
+            $table->bigInteger('peso')->nullable();
+            $table->bigInteger('numero_tiquete')->nullable();
+            $table->bigInteger('numero_corral')->nullable();
             $table->string('sexo')->nullable();
             $table->string('guia_movilizacion',150)->nullable();
             $table->string('especie')->nullable();
+            $table->date('fecha_ingreso')->nullable();
+            $table->date('fecha_guia_ica')->nullable();
             $table->foreignId('id_establecimiento')
                     ->constrained('establecimiento')
                     ->onUpdate('cascade')

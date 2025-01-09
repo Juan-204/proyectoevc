@@ -60,7 +60,11 @@
                 <th>SEXO</th>
                 <th>KILOS</th>
                 <th>N. TIQUETES</th>
+                <th>FECHA INGRESO PLANTA</th>
                 <th>GUÍA DE MOVILIZACIÓN</th>
+                <th>FECHA GUIA ICA</th>
+                <th># DE CORRAL</th>
+                <th>HORA CAIDA</th>
             </tr>
         </thead>
         <tbody>
@@ -71,7 +75,11 @@
                     <td>{{ $animal['sexo'] }}</td>
                     <td>{{ $animal['peso'] }}</td>
                     <td>{{ $animal['numero_tiquete'] }}</td>
+                    <td>{{ $animal['fecha_ingreso'] }}</td>
                     <td>{{ $animal['guia_movilizacion'] }}</td>
+                    <td>{{ $animal['fecha_guia_ica'] }}</td>
+                    <td>{{ $animal['numero_corral'] }}</td>
+                    <td></td>
                 </tr>
             @endforeach
         </tbody>

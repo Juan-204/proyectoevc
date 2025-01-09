@@ -1,6 +1,6 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head } from "@inertiajs/react";
-import { Box, FormControl,Button,MenuItem, Select, TextField, Typography, InputLabel, Table, TableHead, TableRow, TableCell, TableBody, Paper, Modal } from "@mui/material";
+import { Box, FormControl,Button,MenuItem, Select, TextField, Typography, InputLabel, Table, TableHead, TableRow, TableCell, TableBody, Paper, Modal, IconButton } from "@mui/material";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import {ToastContainer } from "react-toastify";
@@ -14,6 +14,7 @@ import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
 import dayjs from 'dayjs'
 import ReusableDataTable from "@/Components/ReusableDataTable";
+import { Add, Delete, Edit } from "@mui/icons-material";
 
 const schemaGuia = Yup.object().shape({
     carne_octavos: Yup.number().required("Este campo es requerido"),
@@ -25,7 +26,9 @@ const schemaGuia = Yup.object().shape({
 })
 
 export default function guiatransporte(props) {
+    const [tablaContext, setTablaContext] = useState(false)
     const [establecimientos, setEstablecimientos] = useState([]);
+    const [edit, setEdit] = useState({})
     const [planta, setPlanta] = useState([]);
     const [vehiculo, setVehiculo] = useState([]);
     const [conductor, setConductor] = useState([]);
@@ -68,13 +71,89 @@ export default function guiatransporte(props) {
         {field: "cabezas", headerName: 'Cabezas', width: 150},
         {field: "temperatura_promedio", headerName: 'Temperatura promedio', width: 150},
         {field: "dictamen", headerName: 'Dicatamen', width: 150},
+        {field: "acciones", headerName: 'Acciones', width: 150,
+            renderCell: (params) => (
+                <>
+                    <IconButton
+                    onClick={() => handleEliminarDescripcion(params.row.id)}
+                    >
+                        <Delete/>
+                    </IconButton>
+                    {params.row.dictamen === 'AC' && (
+                        <IconButton
+                        onClick={() => handleAbrirModalDecomiso(params.row.id)}
+                        >
+                            <Add />
+                        </IconButton>
+                    )}
+                    <IconButton
+                    onClick={() => editarFila(params.row)}
+                    >
+                        <Edit />
+                    </IconButton>
+                </>
+            )
+        }
     ]
+
+    const editarFila = (animal) => {
+        setEdit(animal)
+        console.log(edit)
+    }
+
+    const handleAbrirModalDecomiso = (animal) => {
+
+        setTablaContext(true)
+        console.log("Animal del row", selectedAnimal)
+        console.log("datos de la guia", guiaData)
+
+        const idAnimal = guiaData.find((guia) => guia.id === animal)
+        setselectedAnimal(idAnimal)
+        console.log(idAnimal)
+        setAbrir(true)
+    }
+
+    const agregarDecomiso = (nuevoDecomiso) => {
+
+        const decomisoNormalizado = {
+            id: nuevoDecomiso.id || Math.floor(Math.random() * -1000),
+            numero_animal: nuevoDecomiso.numero_animal || selectedAnimal?.animal?.numero_animal || '',
+            id_animal: nuevoDecomiso.id_animal || selectedAnimal?.animalDetails?.id_animales || null,
+            producto: nuevoDecomiso.producto || '',
+            cantidad: nuevoDecomiso.cantidad || 0,
+            motivo: nuevoDecomiso.motivo || '',
+        };
+
+        setselectedAnimal((prev) => ({
+            ...prev,
+            decomisos: [...(prev.decomisos || []), decomisoNormalizado],
+        }))
+
+        setDecomisoData((prev) => [...prev, decomisoNormalizado])
+    }
+
 
     const columnsDecomisos = [
         {field: 'numero_animal', headerName: '# Animal', width: 150},
         {field: 'producto', headerName: 'Producto', width: 150},
         {field: 'cantidad', headerName: 'Cantidad', width: 150},
         {field: 'motivo', headerName: 'Motivo', width: 150},
+        {field: "acciones", headerName: 'Acciones', width: 150,
+            renderCell: (params) => (
+                <>
+                    <IconButton
+                    onClick={() => handleEliminarDecomiso(params.row.id)}
+                    >
+                        <Delete/>
+                    </IconButton>
+                    <IconButton
+                    onClick={() => editarFila(params.row)}
+                    >
+                        <Edit />
+                    </IconButton>
+                </>
+            )
+        }
     ]
 
     const dictamenSeleccionado = watch('dictamen');
@@ -143,7 +222,45 @@ export default function guiatransporte(props) {
         }
     }, [selectedDate, selectedEstablecimiento]); // El hook depende de ambos valores
 
+    const handleEliminarDescripcion = (id) => {
 
+        //buscamos primero el animal que queremos eliminar y lo guardamos
+        const idAnimalEliminado = guiaData.find((guia) => guia.id === id)
+        //luego eliminamos el animal que seleccionamos
+        const nuevaDescripcion = guiaData.filter((guia) => guia.id !== id)
+        //luego con los datos guardados eliminamoslos decomisos que estan ligados a el
+        const nuevoDecomiso = decomisoData.filter((decomiso) => Number(decomiso.id_animal) !== Number(idAnimalEliminado.animalDetails.id_animales))
+
+        console.log(guiaData)
+        console.log(decomisoData)
+
+        //le pasamos las nuevas listas a los seters
+        setGuiaData(nuevaDescripcion)
+        setDecomisoData(nuevoDecomiso)
+    };
+
+    const handleEliminarDecomiso = (id) => {
+
+        const nuevaDescripcion = guiaData.map((guia) => {
+            const tieneDecomiso = guia.decomisos.some((decomiso) => decomiso.id === id)
+
+            if (tieneDecomiso) {
+                const nuevosDecomisos = guia.decomisos.filter((decomiso => decomiso.id !== id))
+
+                return {
+                    ...guia,
+                    decomisos: nuevosDecomisos,
+                    dictamen: nuevosDecomisos.length === 0 ? "A" : "AC"
+                }
+            }
+            return guia
+        })
+
+        const nuevosDecomisos = decomisoData.filter((decomiso) => decomiso.id !== id)
+
+        setGuiaData(nuevaDescripcion)
+        setDecomisoData(nuevosDecomisos)
+    };
 
     const handleDataChange = async (date) => {
         if(date) {
@@ -225,10 +342,12 @@ export default function guiatransporte(props) {
         if (!animalSele) {
             console.error('No se encontro el animal seleccionado')
             setselectedAnimal('');
+
             setShowAnimalForm(false)
             return;
         }
         setselectedAnimal(animalSele)
+        console.log(selectedAnimal)
         setShowAnimalForm(true)//mostrar el formulario al seleccionar un animal
     }
 
@@ -246,10 +365,15 @@ export default function guiatransporte(props) {
     }, [dictamenSeleccionado]);
 
     const onSubmitGuia = async (data) => {
+        if(tablaContext === true){
+            console.log("es true en la funcion guia")
+        }
+
         data.id_ingreso_detalle = selectedAnimal.id;
         const animalFormat = `${selectedAnimal.animal.numero_animal}${selectedAnimal.animal.sexo === 'Macho' ? 'M' : 'H'}-${selectedAnimal.animal.peso}K-${selectedAnimal.animal.numero_tiquete}`
         const guiaFormat = {
             ...data,
+            id: Math.floor(Math.random() * -1000),
             animalInfo: animalFormat,
             planta: plantaSelected,
             decomisos: tempDataDeco,
@@ -267,17 +391,23 @@ export default function guiatransporte(props) {
     }
 
     const onSubmitDecomisos = async (data) => {
+        if(tablaContext === true){
+            console.log("es true en la funcion decomisos")
+        }
+
+
         data.id_animal = selectedAnimal.animal.id
         const decomiso = {
+            id: Math.floor(Math.random() * -1000),
             numero_animal: selectedAnimal.animal.numero_animal,
             id_animal: selectedAnimal.animal.id,
             producto: data.producto,
             cantidad:data.cantidad,
             motivo: data.motivo,
         }
-        console.log(decomiso)
         setTempDataDeco([...tempDataDeco, decomiso])
     }
+
     const handleGuardarInfoGuia = async () => {
         setLoading(true);
 
@@ -367,6 +497,8 @@ export default function guiatransporte(props) {
                     selectedAnimal={selectedAnimal}
                     onSubmitDecomisos={onSubmitDecomisos}
                     handleCerrar={handleCerrar}
+                    tablaContext={tablaContext}
+                    agregarDecomiso={agregarDecomiso}
                     />
                 </Box>
             </Modal>

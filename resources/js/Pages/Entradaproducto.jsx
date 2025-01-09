@@ -20,6 +20,8 @@ export default function entradaproducto(props) {
     const [establecimientos, setEstablecimientos] = useState([]);
     const [loading, setLoading] = useState('')
     const [selectedDate, setSelectedDate] = useState(null)
+    const [selectedDateICA, setSelectedDateICA] = useState(null)
+    const [selectedDateIngreso, setSelectedDateIngreso] = useState(null)
     const [edit, setEdit] = useState({})
 
     const handleAbrir = () => setAbrir(true);
@@ -35,6 +37,25 @@ export default function entradaproducto(props) {
         {field: 'sexo', headerName: 'Sexo', width: 150},
         {field: 'guia_movilizacion', headerName: 'Guia de Movilizacion', width: 150},
         {field: 'especie', headerName: 'Especie', width: 150},
+        {
+            field: 'fecha_ingreso',
+            headerName: 'Fecha Ingreso Planta',
+            width: 150,
+            /*valueGetter: (params) =>
+                params.row.fecha_ingreso
+                    ? dayjs(params.row.fecha_ingreso).format('DD-MM-YYYY')
+                    : 'Sin Fecha'*/
+        },
+        {
+            field: 'fecha_guia_ica',
+            headerName: 'Fecha Guia ICA',
+            width: 150,
+            /*valueGetter: (params) =>
+                params.row.fecha_guia_ica
+                    ? dayjs(params.row.fecha_guia_ica).format('DD-MM-YYYY')
+                    : 'Sin Fecha'*/
+        },
+        {field: 'numero_corral', headerName: '# De Corral', width: 150},
         {field: 'acciones', headerName: 'Acciones', width: 150,
             renderCell: (params) => (
                 <>
@@ -50,6 +71,7 @@ export default function entradaproducto(props) {
                 </>
             )
         },
+        {headerName: 'Hora de Caida', width: 150},
     ]
 
     const rows = animales.map((animal, index) => ({
@@ -79,6 +101,7 @@ export default function entradaproducto(props) {
         sexo: yup.string().required('Sexo es obligatorio'),
         guia_movilizacion: yup.string().required('Guia movilización es obligatoria'),
         especie: yup.string().required('Especie es obligatoria'),
+        numero_corral: yup.string().required('El Numero del Corral es obligatoria'),
         id_establecimiento: yup.string().required('Destino es obligatorio'),
     })
 
@@ -118,8 +141,26 @@ export default function entradaproducto(props) {
         }
     }
 
+    const handleDataChangeIngreso= async (date) => {
+        if(date) {
+            const dateString = dayjs(date).format('YYYY-MM-DD')
+            console.log('Fecha Seleccionada', dateString)
+            setSelectedDateIngreso(dateString)
+        }
+    }
+
+    const handleDataChangeICA = async (date) => {
+        if(date) {
+            const dateString = dayjs(date).format('YYYY-MM-DD')
+            console.log('Fecha Seleccionada', dateString)
+            setSelectedDateICA(dateString)
+        }
+    }
+
     //agregar animales en una tabla temporal
     const agregarAnimal = (data) => {
+        console.log(data)
+
 
         const establecimiento = establecimientos.find(est =>
             parseInt(est.id, 10) === parseInt(data.id_establecimiento, 10)
@@ -140,6 +181,8 @@ export default function entradaproducto(props) {
             ...data,
             marca_diferencial: establecimiento ? establecimiento.marca_diferencial : "Desconocido",
             id_establecimiento: establecimiento.id,
+            fecha_ingreso: selectedDateIngreso || null,
+            fecha_guia_ica: selectedDateICA || null,
             id: Math.floor(Math.random() * -1000)
         };
 
@@ -149,8 +192,6 @@ export default function entradaproducto(props) {
 
         reset();
     };
-
-
 
     const borrarFila = (id) => {
         const NuevosDatos = animales.filter((animal) => animal.id !== id)
@@ -324,6 +365,21 @@ export default function entradaproducto(props) {
                             </FormControl>
 
                             <FormControl
+                            variant='filled'
+                            fullWidth
+                            margin='normal'>
+                            <LocalizationProvider dateAdapter={AdapterDayjs}>
+                                <DatePicker
+                                label="Fecha Ingreso Planta"
+                                value={selectedDateIngreso ? dayjs(selectedDateIngreso) : null}
+                                onChange={handleDataChangeIngreso}
+                                renderInput={(params) => <TextField {...params}/>}
+                                format='DD-MM-YYYY'
+                                />
+                            </LocalizationProvider>
+                            </FormControl>
+
+                            <FormControl
                             variant="filled"
                             fullWidth
                             margin='normal'
@@ -392,6 +448,35 @@ export default function entradaproducto(props) {
                                 error={!!errors.guia_movilizacion}
                             />
                             {errors.guia_movilizacion && <Typography color="error">{errors.guia_movilizacion.message}</Typography>}
+                            </FormControl>
+
+                            <FormControl
+                            variant='filled'
+                            fullWidth
+                            margin='normal'>
+                            <LocalizationProvider dateAdapter={AdapterDayjs}>
+                                <DatePicker
+                                label="Fecha Guia ICA"
+                                value={selectedDateICA ? dayjs(selectedDateICA) : null}
+                                onChange={handleDataChangeICA}
+                                renderInput={(params) => <TextField {...params}/>}
+                                format='DD-MM-YYYY'
+                                />
+                            </LocalizationProvider>
+                            </FormControl>
+
+                            <FormControl
+                            variant="filled"
+                            fullWidth
+                            margin="normal"
+                            >
+                            <TextField
+                                variant='filled'
+                                label="# De Corral"
+                                {...register('numero_corral')}
+                                error={!!errors.numero_corral}
+                            />
+                            {errors.numero_corral && <Typography color="error">{errors.numero_corral.message}</Typography>}
                             </FormControl>
 
                             <FormControl
