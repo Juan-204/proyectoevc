@@ -46,7 +46,7 @@
 </head>
 <body>
     <div class="header">
-        <img src="{{ public_path('images/logoEVC.png') }}" alt="Logo">
+        <img src="{{ public_path('images/OIP.png') }}" alt="Logo">
     </div>
     <div class="title">
         ENTRADA DE BOVINOS - PLANILLA DE CONTROL<br>
@@ -61,8 +61,8 @@
                 <th>KILOS</th>
                 <th>N. TIQUETES</th>
                 <th>FECHA INGRESO PLANTA</th>
-                <th>GUÍA DE MOVILIZACIÓN</th>
-                <th>FECHA GUIA ICA</th>
+                <th>GUíA DE MOVILIZACIÓN</th>
+                <th>FECHA GUíA ICA</th>
                 <th># DE CORRAL</th>
                 <th>HORA CAIDA</th>
             </tr>
@@ -85,7 +85,7 @@
         </tbody>
     </table>
     <div class="footer">
-        Empresa Varias de Caicedonia S.A E.S.P
+        Empresa Varias de Caicedonia EVC-E.S.P
     </div>
 </body>
 </html>
