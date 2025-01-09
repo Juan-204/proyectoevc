@@ -36,6 +36,9 @@ class AnimalController extends Controller
             'animales.*.guia_movilizacion' => 'nullable|string|max:150',
             'animales.*.especie' => 'nullable|string|max:255',
             'animales.*.id_establecimiento' => 'required|exists:establecimiento,id',
+            'animales.*.numero_corral' => 'nullable|integer',
+            'animales.*.fecha_ingreso' => 'required|date',
+            'animales.*.fecha_guia_ica' => 'required|date',
             'fecha' => 'required|date',
         ]);
 
@@ -81,7 +84,8 @@ class AnimalController extends Controller
             DB::commit();  // Confirmar la transacción
 
             // Generar el PDF después de la transacción
-            $pdf = Pdf::loadView('pdf.ingreso', ['animales' => $animalesTotales, 'fecha' => $hoy]);
+            $pdf = Pdf::loadView('pdf.ingreso', ['animales' => $animalesTotales, 'fecha' => $hoy])
+                ->setPaper('a4', 'landscape');
 
             return response()->stream(function () use ($pdf) {
                 echo $pdf->output();
@@ -120,6 +124,10 @@ class AnimalController extends Controller
                 'guia_movilizacion' => $animal->guia_movilizacion,
                 'especie' => $animal->especie,
                 'marca_diferencial' => $animal->establecimiento->marca_diferencial,
+                'numero_corral' =>$animal->numero_corral,
+                'fecha_ingreso' =>$animal->fecha_ingreso,
+                'fecha_guia_ica' =>$animal->fecha_guia_ica,
+
             ];
         });
 
@@ -154,18 +162,49 @@ class AnimalController extends Controller
     }
 
     public function buscar(Request $request)
-{
-    $query = $request->input('query');
+    {
+        $query = $request->input('query');
 
-    if (empty($query)) {
-        $animales = Animal::orderBy('id', 'asc')->get();
-    } else {
-        // Realizar la búsqueda utilizando Laravel Scout
-        $animales = Animal::search($query)->get();
+        if (empty($query)) {
+            $animales = Animal::orderBy('id', 'asc')->get();
+        } else {
+            // Realizar la búsqueda utilizando Laravel Scout
+            $animales = Animal::search($query)->get();
+        }
+
+        return response()->json($animales);
     }
 
-    return response()->json($animales);
-}
+    public function destroy($id)
+    {
+        try{
+            $animal = Animal::findOrFail($id);
+            $animal->delete();
 
+            return response()->json(['message' => 'Registro eliminado con exito'], 200);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Error al eliminadar el registro'], 200);
+        }
+    }
 
+    public function update($id, Request $request)
+    {
+        $animal = Animal::findOrFail($id);
+
+        $validated = $request->validate([
+            'animales' => 'required|array',
+            'animales.*.numero_animal' => 'required|string',
+            'animales.*.peso' => 'required|integer',
+            'animales.*.numero_tiquete' => 'nullable|integer',
+            'animales.*.sexo' => 'nullable|string|max:255',
+            'animales.*.guia_movilizacion' => 'nullable|string|max:150',
+            'animales.*.especie' => 'nullable|string|max:255',
+            'animales.*.id_establecimiento' => 'required|exists:establecimiento,id',
+        ]);
+
+        $animal->update($validated);
+
+        return response()->json($animal, 200);
+
+    }
 }

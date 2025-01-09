@@ -7,28 +7,25 @@ import { yupResolver } from "@hookform/resolvers/yup";
 const schemaDecomiso = Yup.object().shape({
     producto: Yup.string().required("Este campo es requerido"),
     cantidad: Yup.number().required("Este campo es requerido"),
-    numero_animal: Yup.string().required("esta campo es requerido"),
+    numero_animal: Yup.number().required("esta campo es requerido"),
     motivo: Yup.string().required("Este campo es requerido"),
 })
 
-const DecomisoForm = ({selectedAnimal, onSubmitDecomisos}) => {
+const DecomisoForm = ({selectedAnimal, onSubmitDecomisos, tablaContext, agregarDecomiso}) => {
+    console.log(selectedAnimal)
 
-    //console.log("estoy en el modal esto es lo que llega", selectedAnimal)
+    let numero_animalValue = ''
+    if(tablaContext === true){
+        numero_animalValue = selectedAnimal?.animalDetails?.animal?.numero_animal
+    } else {
+        numero_animalValue = selectedAnimal?.animal?.numero_animal
+    }
 
-    useEffect(() => {
-        if (selectedAnimal && selectedAnimal.animal) {
-          // Si selectedAnimal y selectedAnimal.animal están definidos
-          console.log("selectedAnimal y su propiedad animal llegaron correctamente:", selectedAnimal.animal);
-        } else {
-          // Si selectedAnimal o selectedAnimal.animal no están definidos
-          console.log("selectedAnimal no ha llegado o falta la propiedad 'animal'.");
-        }
-      }, [selectedAnimal]);
 
     const {register, handleSubmit, reset, formState: {errors}} = useForm({
         resolver: yupResolver(schemaDecomiso),
         defaultValues: {
-            numero_animal: selectedAnimal?.animal?.numero_animal || '' ,
+            numero_animal: numero_animalValue || '',
             producto: '',
             cantidad: '',
             motivo: '',
@@ -36,12 +33,13 @@ const DecomisoForm = ({selectedAnimal, onSubmitDecomisos}) => {
     })
 
     const onSubmit = (data) => {
-        data.numero_animal = selectedAnimal?.animal.numero_animal || "N/A"; // Agrega el número de animal
         onSubmitDecomisos(data); // Llama a la función pasada como prop
-        console.log("datos desde el Modal",data)
         reset(); // Resetea el formulario
-    };
 
+        if (tablaContext === true) {
+            agregarDecomiso(data)
+        }
+    };
 
 
     return (
@@ -64,7 +62,7 @@ const DecomisoForm = ({selectedAnimal, onSubmitDecomisos}) => {
                     <TextField
                     variant="filled"
                     label="# Animal"
-                    value={selectedAnimal?.animal?.numero_animal || ''}
+                    value={numero_animalValue || ''}
                     {...register('numero_animal')}
                     error={!!errors.numero_animal}
                     disabled/>
@@ -93,6 +91,5 @@ const DecomisoForm = ({selectedAnimal, onSubmitDecomisos}) => {
         </div>
     )
 }
-
 
 export default DecomisoForm

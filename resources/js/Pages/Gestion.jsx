@@ -1,8 +1,8 @@
-import ConductoresModal from '@/Components/ConductoresModal';
-import EstablecimientoModal from '@/Components/EstablecimientoModal';
-import PlantaModal from '@/Components/PlantaModal';
+import ConductoresModal from '@/Forms/ConductoresForm';
+import EstablecimientoModal from '@/Forms/EstablecimientoForm';
+import PlantaModal from '@/Forms/PlantaForm';
 import ReusableDataTable from '@/Components/ReusableDataTable';
-import VehiculosModal from '@/Components/VehiculosModal';
+import VehiculosModal from '@/Forms/VehiculosForm';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head } from '@inertiajs/react';
 import { ExpandMoreOutlined } from '@mui/icons-material';

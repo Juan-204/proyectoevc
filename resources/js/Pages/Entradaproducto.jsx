@@ -1,9 +1,9 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head } from '@inertiajs/react';
-import { Box, TextField, Button, MenuItem, Select, FormControl, InputLabel, Typography, Table, TableHead, TableRow, TableBody, TableCell, IconButton, CircularProgress} from '@mui/material';
+import { Box, TextField, Button, MenuItem, Select, FormControl, InputLabel, Typography, IconButton, CircularProgress, Modal} from '@mui/material';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
-import { Form, useForm } from 'react-hook-form';
+import { Form, set, useForm } from 'react-hook-form';
 import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
 import Swal from 'sweetalert2';
@@ -13,12 +13,21 @@ import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
 import dayjs from 'dayjs'
 import ReusableDataTable from '@/Components/ReusableDataTable';
+import EntradaModal from '@/EditsModals/EntradaModal';
 
 export default function entradaproducto(props) {
     const [animales, setAnimales] = useState([]); //tabla temporal de animales
     const [establecimientos, setEstablecimientos] = useState([]);
     const [loading, setLoading] = useState('')
     const [selectedDate, setSelectedDate] = useState(null)
+    const [selectedDateICA, setSelectedDateICA] = useState(null)
+    const [selectedDateIngreso, setSelectedDateIngreso] = useState(null)
+    const [edit, setEdit] = useState({})
+
+    const handleAbrir = () => setAbrir(true);
+    const handleCerrar = () => setAbrir(false);
+    const [isModalOpen, setIsModalOPen] = useState(false)
+    const [abrir, setAbrir] = useState(false)
 
     const columns = [
         {field: 'marca_diferencial', headerName: 'Destino', width: 150},
@@ -28,23 +37,47 @@ export default function entradaproducto(props) {
         {field: 'sexo', headerName: 'Sexo', width: 150},
         {field: 'guia_movilizacion', headerName: 'Guia de Movilizacion', width: 150},
         {field: 'especie', headerName: 'Especie', width: 150},
+        {
+            field: 'fecha_ingreso',
+            headerName: 'Fecha Ingreso Planta',
+            width: 150,
+            /*valueGetter: (params) =>
+                params.row.fecha_ingreso
+                    ? dayjs(params.row.fecha_ingreso).format('DD-MM-YYYY')
+                    : 'Sin Fecha'*/
+        },
+        {
+            field: 'fecha_guia_ica',
+            headerName: 'Fecha Guia ICA',
+            width: 150,
+            /*valueGetter: (params) =>
+                params.row.fecha_guia_ica
+                    ? dayjs(params.row.fecha_guia_ica).format('DD-MM-YYYY')
+                    : 'Sin Fecha'*/
+        },
+        {field: 'numero_corral', headerName: '# De Corral', width: 150},
         {field: 'acciones', headerName: 'Acciones', width: 150,
             renderCell: (params) => (
                 <>
-                    <IconButton onClick={() => borrarFila(params.row.id)}>
+                    <IconButton onClick={() => borrarFila(params.row.id)}
+                        disabled={params.row.isRegistered}
+                        >
                         <Delete/>
                     </IconButton>
-                    <IconButton onClick={() => editarFila(params.row.id)}>
+                    <IconButton onClick={() => editarFila(params.row)}
+                        disabled={params.row.isRegistered}>
                         <Edit/>
                     </IconButton>
                 </>
             )
         },
+        {headerName: 'Hora de Caida', width: 150},
     ]
 
     const rows = animales.map((animal, index) => ({
         id: index,
         ...animal,
+        isRegistered: animal.id > 0
     }))
 
     //obtenemos los establecimientos para visualizarlos mediante un dropdown
@@ -68,6 +101,7 @@ export default function entradaproducto(props) {
         sexo: yup.string().required('Sexo es obligatorio'),
         guia_movilizacion: yup.string().required('Guia movilización es obligatoria'),
         especie: yup.string().required('Especie es obligatoria'),
+        numero_corral: yup.string().required('El Numero del Corral es obligatoria'),
         id_establecimiento: yup.string().required('Destino es obligatorio'),
     })
 
@@ -107,8 +141,26 @@ export default function entradaproducto(props) {
         }
     }
 
+    const handleDataChangeIngreso= async (date) => {
+        if(date) {
+            const dateString = dayjs(date).format('YYYY-MM-DD')
+            console.log('Fecha Seleccionada', dateString)
+            setSelectedDateIngreso(dateString)
+        }
+    }
+
+    const handleDataChangeICA = async (date) => {
+        if(date) {
+            const dateString = dayjs(date).format('YYYY-MM-DD')
+            console.log('Fecha Seleccionada', dateString)
+            setSelectedDateICA(dateString)
+        }
+    }
+
     //agregar animales en una tabla temporal
     const agregarAnimal = (data) => {
+        console.log(data)
+
 
         const establecimiento = establecimientos.find(est =>
             parseInt(est.id, 10) === parseInt(data.id_establecimiento, 10)
@@ -128,32 +180,66 @@ export default function entradaproducto(props) {
         const nuevoAnimal = {
             ...data,
             marca_diferencial: establecimiento ? establecimiento.marca_diferencial : "Desconocido",
-            id_establecimiento: establecimiento.id
+            id_establecimiento: establecimiento.id,
+            fecha_ingreso: selectedDateIngreso || null,
+            fecha_guia_ica: selectedDateICA || null,
+            id: Math.floor(Math.random() * -1000)
         };
 
+        console.log(nuevoAnimal)
+
         setAnimales([...animales, nuevoAnimal]);
+
         reset();
     };
 
     const borrarFila = (id) => {
-        const NuevosDatos = animales.filter((_,i) => i !== id)
+        const NuevosDatos = animales.filter((animal) => animal.id !== id)
         setAnimales(NuevosDatos)
     }
 
-    const editarFila = (index, updatedData) => {
-        setAnimales((prevAnimales) =>
-            prevAnimales.map((animal, i) =>
-                i === index ? {...animal, ...updatedData} : animal
-            )
-        )
+    const editarFila = (animal) => {
+        setEdit(animal)
+        handleAbrir()
+        console.log(edit)
     }
+
+    const agregarAct = (data) => {
+        setAnimales((prevAnimales) => {
+            const nuevoEstablecimiento = establecimientos.find(
+                (est) => Number(data.id_establecimiento) === Number(est.id)
+            )
+
+            if (!nuevoEstablecimiento) {
+                console.warn(
+                    `No se encontro un establecimiento para el id_establecimiento: ${data.id_establecimiento}`,
+                    nuevoEstablecimiento,
+                    establecimientos
+                )
+                return prevAnimales
+            }
+
+            return prevAnimales.map((item) => {
+                if (item.id === data.id){
+                    return {
+                        ...item,
+                        ...data,
+                        marca_diferencial: nuevoEstablecimiento.marca_diferencial
+                    }
+                }
+                return item
+            })
+        });
+        handleCerrar()
+    };
+
 
     const HandleGuardarIngreso = async () => {
         setLoading(true)
         try{
 
-            const nuevosAnimales = animales.filter((animal) => !animal.id)
-            const animalesParse = nuevosAnimales.map(animal => ({
+            const nuevosAnimales = animales.filter((animal) => animal.id < 0)
+            const animalesParse = nuevosAnimales.map(({id, ...animal}) => ({
                 ...animal,
                 peso: parseFloat(animal.peso),
                 numero_tiquete: parseInt(animal.numero_tiquete, 10),
@@ -181,7 +267,7 @@ export default function entradaproducto(props) {
         } catch (error) {
             if (error.response){
                 console.error('Errores de validacion', error.response.data.errors)
-                setAnimales([])
+                //setAnimales([])
                 //mensajes en forma de modal para la aprobacion de el formulario
                 Swal.fire({
                     position: "center",
@@ -213,6 +299,19 @@ export default function entradaproducto(props) {
             errors={props.errors}
             header={<h2 className="font-semibold text-xl text-gray-800 leading-tight">Entrada Procuto</h2>}
         >
+
+            <Modal open={abrir} onClose={handleCerrar}>
+                <Box className="rounded-[5px] flex fixed top-1/2 left-1/2 w-auto h-auto bg-slate-50 -translate-x-1/2 -translate-y-1/2">
+                    <EntradaModal
+                    isOpen={isModalOpen}
+                    onClose={() => setIsModalOPen(false)}
+                    edit={edit}
+                    establecimientos={establecimientos}
+                    agregarAct={agregarAct}
+                    />
+                </Box>
+            </Modal>
+
             <Head title="Entrada Producto"/>
             <div className="py-12">
                 <div className="mx-auto sm:px-6 grid gap-10 lg:px-8">
@@ -263,6 +362,21 @@ export default function entradaproducto(props) {
                                 ))}
                                 </Select>
                                 {errors.id_establecimiento && <Typography color="error">{errors.id_establecimiento.message}</Typography>}
+                            </FormControl>
+
+                            <FormControl
+                            variant='filled'
+                            fullWidth
+                            margin='normal'>
+                            <LocalizationProvider dateAdapter={AdapterDayjs}>
+                                <DatePicker
+                                label="Fecha Ingreso Planta"
+                                value={selectedDateIngreso ? dayjs(selectedDateIngreso) : null}
+                                onChange={handleDataChangeIngreso}
+                                renderInput={(params) => <TextField {...params}/>}
+                                format='DD-MM-YYYY'
+                                />
+                            </LocalizationProvider>
                             </FormControl>
 
                             <FormControl
@@ -334,6 +448,35 @@ export default function entradaproducto(props) {
                                 error={!!errors.guia_movilizacion}
                             />
                             {errors.guia_movilizacion && <Typography color="error">{errors.guia_movilizacion.message}</Typography>}
+                            </FormControl>
+
+                            <FormControl
+                            variant='filled'
+                            fullWidth
+                            margin='normal'>
+                            <LocalizationProvider dateAdapter={AdapterDayjs}>
+                                <DatePicker
+                                label="Fecha Guia ICA"
+                                value={selectedDateICA ? dayjs(selectedDateICA) : null}
+                                onChange={handleDataChangeICA}
+                                renderInput={(params) => <TextField {...params}/>}
+                                format='DD-MM-YYYY'
+                                />
+                            </LocalizationProvider>
+                            </FormControl>
+
+                            <FormControl
+                            variant="filled"
+                            fullWidth
+                            margin="normal"
+                            >
+                            <TextField
+                                variant='filled'
+                                label="# De Corral"
+                                {...register('numero_corral')}
+                                error={!!errors.numero_corral}
+                            />
+                            {errors.numero_corral && <Typography color="error">{errors.numero_corral.message}</Typography>}
                             </FormControl>
 
                             <FormControl

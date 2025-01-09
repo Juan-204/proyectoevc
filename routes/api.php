@@ -52,6 +52,10 @@ Route::get('/animales-fecha', [AnimalController::class, 'getAnimalesPorFecha']);
 //OTROS
 Route::get('/municipios/{departamento}', [MunicipioController::class, 'ObteneMunicipiosPorDepto']);
 Route::get('/animales/establecimiento/{id}', [AnimalController::class, 'AnimalesPorFecha']);
-
 //busquedas
 Route::get('/buscar-animales', [AnimalController::class, 'buscar']);
+//BORRAr
+Route::delete('/animales/{id}', [AnimalController::class, 'destroy']);
+//ACTUALIZAR
+Route::put('/animales/{id}', [AnimalController::class, 'update']);
+
