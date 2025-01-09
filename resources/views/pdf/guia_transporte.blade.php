@@ -75,11 +75,11 @@
 <body>
     <div class="cabeza clearfix">
         <div class="imagen">
-            <img src="{{ public_path('images/logoEVC.png') }}" alt="Logo">
+            <img src="{{ public_path('images/OIP.png') }}" alt="Logo">
         </div>
         <div class="textarea">
             <p class="textH">
-                <strong>GUIA DE TRANSPORTE DE CARNE EN CANAL DESHUESADA Y SUBPRODUCTOS COMESTIBLES</strong>
+                <strong>GUíA DE TRANSPORTE DE CARNE EN CANAL DESHUESADA Y SUBPRODUCTOS COMESTIBLES</strong>
             </p>
         </div>
         <div class="cuadro">

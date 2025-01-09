@@ -456,7 +456,7 @@ export default function entradaproducto(props) {
                             margin='normal'>
                             <LocalizationProvider dateAdapter={AdapterDayjs}>
                                 <DatePicker
-                                label="Fecha Guia ICA"
+                                label="Fecha Guía ICA"
                                 value={selectedDateICA ? dayjs(selectedDateICA) : null}
                                 onChange={handleDataChangeICA}
                                 renderInput={(params) => <TextField {...params}/>}

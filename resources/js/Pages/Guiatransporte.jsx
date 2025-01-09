@@ -683,7 +683,7 @@ export default function guiatransporte(props) {
 
                             {selectedAnimal && showAnimalForm && (
                             <div className="bg-white overflow-hidden h-52 shadow-sm sm:rounded-lg flex flex-col items-center">
-                                <Typography variant="h5">Informacio de la guia de Transporte</Typography>
+                                <Typography variant="h5">Informacio de la Guía de Transporte</Typography>
                                 <Box
                                 class="p-5 flex flex-row space-x-9 h-auto w-full items-start "
                                 component="form"
@@ -751,7 +751,7 @@ export default function guiatransporte(props) {
                                     <FormControl fullWidth margin="normal">
                                         <TextField
                                         variant="filled"
-                                        label="Guia ICA"
+                                        label="Guía ICA"
                                         value={selectedAnimal.animal.guia_movilizacion}
                                         disabled/>
                                     </FormControl>
