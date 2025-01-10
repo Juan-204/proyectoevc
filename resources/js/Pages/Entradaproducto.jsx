@@ -41,19 +41,11 @@ export default function entradaproducto(props) {
             field: 'fecha_ingreso',
             headerName: 'Fecha Ingreso Planta',
             width: 150,
-            /*valueGetter: (params) =>
-                params.row.fecha_ingreso
-                    ? dayjs(params.row.fecha_ingreso).format('DD-MM-YYYY')
-                    : 'Sin Fecha'*/
         },
         {
             field: 'fecha_guia_ica',
             headerName: 'Fecha Guia ICA',
             width: 150,
-            /*valueGetter: (params) =>
-                params.row.fecha_guia_ica
-                    ? dayjs(params.row.fecha_guia_ica).format('DD-MM-YYYY')
-                    : 'Sin Fecha'*/
         },
         {field: 'numero_corral', headerName: '# De Corral', width: 150},
         {field: 'acciones', headerName: 'Acciones', width: 150,

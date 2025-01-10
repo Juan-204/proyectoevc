@@ -15,6 +15,7 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
 import dayjs from 'dayjs'
 import ReusableDataTable from "@/Components/ReusableDataTable";
 import { Add, Delete, Edit } from "@mui/icons-material";
+import GuiaTransporteModal from "@/EditsModals/GuiaTransporteModal";
 
 const schemaGuia = Yup.object().shape({
     carne_octavos: Yup.number().required("Este campo es requerido"),
@@ -50,6 +51,13 @@ export default function guiatransporte(props) {
         direccion: '',
         telefono: '',
     })
+
+    const handleAbrirGuia = () => setAbrirGuia(true);
+    const handleCerrarGuia = () => setAbrirGuia(false);
+    const [isModalOpen, setIsModalOPen] = useState(false)
+    const [abrirGuia, setAbrirGuia] = useState(false)
+
+
     const {register: regGuia , handleSubmit: submitGuia, watch, reset: resetGuia, formState: {errors}} = useForm({
         resolver: yupResolver(schemaGuia),
         defaultValues: {
@@ -98,7 +106,8 @@ export default function guiatransporte(props) {
 
     const editarFila = (animal) => {
         setEdit(animal)
-        console.log(edit)
+        handleAbrirGuia()
+        console.log("Animal Seleccionado", animal)
     }
 
     const handleAbrirModalDecomiso = (animal) => {
@@ -395,7 +404,6 @@ export default function guiatransporte(props) {
             console.log("es true en la funcion decomisos")
         }
 
-
         data.id_animal = selectedAnimal.animal.id
         const decomiso = {
             id: Math.floor(Math.random() * -1000),
@@ -484,6 +492,13 @@ export default function guiatransporte(props) {
         }
     };
 
+    const handleFormSubmit = (data) => {
+        console.log('Datos enviados:', data)
+
+        const formData = data;
+        console.log('Datos enviados a la variable:', formData)
+    }
+
     return (
         <AuthenticatedLayout
             auth={props.auth}
@@ -499,6 +514,17 @@ export default function guiatransporte(props) {
                     handleCerrar={handleCerrar}
                     tablaContext={tablaContext}
                     agregarDecomiso={agregarDecomiso}
+                    />
+                </Box>
+            </Modal>
+
+            <Modal open={abrirGuia} onClose={handleCerrarGuia}>
+                <Box className="rounded-[5px] flex fixed top-1/2 left-1/2 w-auto h-auto bg-slate-50 -translate-x-1/2 -translate-y-1/2">
+                    <GuiaTransporteModal
+                    isOpen={isModalOpen}
+                    onClose={() => setIsModalOPen(false)}
+                    selectedAnimal={edit}
+                    onSubmitGuia={handleFormSubmit}
                     />
                 </Box>
             </Modal>
